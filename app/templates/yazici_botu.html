@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🖨️ iyb waffle - Yazıcı Botu</title>
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0; padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  color: white; min-height: 100vh;
+}
+h1 { font-size: 22px; margin: 0 0 4px 0; text-align: center; }
+.subtitle { text-align: center; color: #8b9eb3; font-size: 12px; margin-bottom: 16px; }
+
+.status-card {
+  background: rgba(255,255,255,0.05);
+  border: 2px solid #4ade80;
+  border-radius: 14px; padding: 16px; margin-bottom: 14px;
+}
+.status-card.error { border-color: #ef4444; }
+.status-card.warning { border-color: #f59e0b; }
+
+.status-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; margin: 4px 0;
+}
+.status-row b { color: #4ade80; }
+.status-row.error b { color: #ef4444; }
+
+.pulse {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: #4ade80; display: inline-block; margin-right: 6px;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.7); }
+  50% { box-shadow: 0 0 0 8px rgba(74,222,128,0); }
+}
+.pulse.red { background: #ef4444; }
+.pulse.red { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); }
+
+.log-box {
+  background: rgba(0,0,0,0.3); border-radius: 10px;
+  padding: 10px; max-height: 200px; overflow-y: auto;
+  font-family: 'Courier New', monospace; font-size: 11px;
+  line-height: 1.5;
+}
+.log-line { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.log-line.success { color: #4ade80; }
+.log-line.error { color: #ef4444; }
+.log-line.info { color: #60a5fa; }
+.log-time { color: #64748b; margin-right: 6px; }
+
+.btn-row { display: flex; gap: 8px; margin-top: 10px; }
+.btn {
+  flex: 1; padding: 12px; border: none; border-radius: 10px;
+  font-weight: 800; cursor: pointer; font-size: 13px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white;
+}
+.btn.warn { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.btn.danger { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+.btn:active { transform: scale(0.96); }
+
+.recent-list { margin-top: 14px; }
+.recent-item {
+  background: rgba(255,255,255,0.05); border-radius: 10px;
+  padding: 10px; margin-bottom: 6px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.recent-info { font-size: 12px; }
+.recent-info b { color: #fbbf24; }
+.recent-info .meta { color: #8b9eb3; font-size: 10px; margin-top: 2px; }
+.recent-badge {
+  font-size: 9px; font-weight: 900; padding: 3px 8px;
+  border-radius: 999px; margin-right: 6px;
+}
+.recent-badge.printed { background: #4ade80; color: #052e16; }
+.recent-badge.unprinted { background: #f59e0b; color: #422006; }
+.btn-reprint {
+  background: #3b82f6; color: white; border: none;
+  padding: 6px 10px; border-radius: 8px; font-size: 11px;
+  font-weight: 700; cursor: pointer;
+}
+
+.big-counter {
+  text-align: center; font-size: 48px; font-weight: 900;
+  color: #4ade80; margin: 10px 0;
+}
+.big-counter.pending { color: #f59e0b; animation: blink 1s infinite; }
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+</style>
+</head>
+<body>
+
+<h1>🖨️ iyb waffle Yazıcı Botu</h1>
+<div class="subtitle">Kasanın altındaki Android telefonda çalışır</div>
+
+<div class="status-card" id="statusCard">
+  <div class="status-row">
+    <span><span class="pulse" id="pulseDot"></span> <b id="statusText">Aktif - Dinleniyor</b></span>
+    <span style="color:#8b9eb3;" id="lastCheck">--:--</span>
+  </div>
+  <div class="status-row">
+    <span>Toplam Basılan:</span>
+    <span><b id="totalPrinted">0</b> fiş</span>
+  </div>
+  <div class="status-row">
+    <span>Sırada Bekleyen:</span>
+    <span><b id="pendingCount">0</b></span>
+  </div>
+</div>
+
+<div class="big-counter" id="bigCounter">0</div>
+
+<div class="btn-row">
+  <button class="btn" onclick="manualCheck()">🔄 Şimdi Kontrol Et</button>
+  <button class="btn warn" onclick="testPrint()">🖨️ Test Fişi Bas</button>
+</div>
+
+<!-- Gizli teşhis menüsü - normalde kapalı, ⚙️ ile açılır -->
+<div style="text-align:center; margin-top:10px;">
+  <button onclick="toggleDiag()" style="background:none; border:none; color:#64748b; font-size:11px; cursor:pointer; text-decoration:underline;">
+    ⚙️ Yazıcı Ayarları (sorun olursa)
+  </button>
+</div>
+
+<div id="diagPanel" style="display:none; margin-top:8px; background:rgba(255,255,255,0.05); padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
+  <div style="font-size:11px; color:#8b9eb3; margin-bottom:4px;">
+    🔬 Aktif Yöntem: <b id="activeMethod" style="color:#4ade80;">2</b>
+  </div>
+  <div style="font-size:10px; color:#64748b; margin-bottom:8px; line-height:1.4;">
+    Yazıcı çalışmıyorsa sırayla dene. Fiş çıkaran yöntemde "EVET" de.
+  </div>
+  <div class="btn-row">
+    <button class="btn" style="font-size:11px; padding:8px;" onclick="testFormat(1)">Yöntem 1<br>intent://</button>
+    <button class="btn" style="font-size:11px; padding:8px;" onclick="testFormat(2)">Yöntem 2<br>rawbt:</button>
+    <button class="btn" style="font-size:11px; padding:8px;" onclick="testFormat(3)">Yöntem 3<br>S.text</button>
+  </div>
+</div>
+
+<div style="margin-top:14px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+    <h3 style="margin:0; font-size:14px; color:#fbbf24;">📋 İşlem Logları</h3>
+    <button class="btn-reprint" onclick="clearLogs()">🗑️ Temizle</button>
+  </div>
+  <div class="log-box" id="logBox">
+    <div class="log-line info"><span class="log-time">--:--</span>Bot başlatılıyor...</div>
+  </div>
+</div>
+
+<div class="recent-list">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin:14px 0 8px;">
+    <h3 style="margin:0; font-size:14px; color:#fbbf24;">📜 Son Siparişler</h3>
+    <button class="btn-reprint" onclick="loadRecent()">🔄 Yenile</button>
+  </div>
+  <div id="recentList"></div>
+</div>
+
+<script>
+// ============================================================
+// 🖨️ YAZICI BOTU
+// ============================================================
+const POLL_INTERVAL = 3500;        // 3.5 saniye
+const PRINT_DELAY = 1500;          // Yazdırmalar arası 1.5 sn (queue)
+const WAKE_LOCK_RETRY = 60000;     // Ekran kilidi yenileme
+
+let printedThisSession = new Set();
+let isPrinting = false;
+let totalPrinted = parseInt(localStorage.getItem('iyb_total_printed') || '0');
+let wakeLock = null;
+
+// localStorage'dan kalıcı basılmış siparişleri yükle
+let permanentlyPrinted = new Set(JSON.parse(localStorage.getItem('iyb_printed_orders') || '[]'));
+
+document.getElementById('totalPrinted').textContent = totalPrinted;
+
+// ============================================================
+// LOG
+// ============================================================
+function log(msg, type = 'info') {
+  const box = document.getElementById('logBox');
+  const time = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const line = document.createElement('div');
+  line.className = 'log-line ' + type;
+  line.innerHTML = `<span class="log-time">${time}</span>${msg}`;
+  box.insertBefore(line, box.firstChild);
+  
+  // Max 50 satır tut
+  while (box.children.length > 50) box.removeChild(box.lastChild);
+}
+
+function clearLogs() {
+  document.getElementById('logBox').innerHTML = '';
+  log('Loglar temizlendi', 'info');
+}
+
+// ============================================================
+// WAKE LOCK - Ekran sönmesin
+// ============================================================
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      log('🔓 Ekran kilidi alındı (ekran sönmeyecek)', 'success');
+      wakeLock.addEventListener('release', () => {
+        log('⚠️ Ekran kilidi kayboldu, tekrar deneniyor...', 'error');
+      });
+    }
+  } catch (e) {
+    log('⚠️ Wake Lock alınamadı: ' + e.message, 'error');
+  }
+}
+
+// Sayfa görünür hale gelince wake lock yenile
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && (!wakeLock || wakeLock.released)) {
+    requestWakeLock();
+  }
+});
+
+// ============================================================
+// FİŞ FORMATI - RawBT için
+// ============================================================
+function buildReceiptText(order) {
+  // ESC/POS komutları RawBT tarafından desteklenir
+  // \n satır sonu, basit text format
+  
+  const sep = '--------------------------------\n';
+  const dblSep = '================================\n';
+  
+  let text = '';
+  text += '\n';
+  text += '      IYB WAFFLE\n';
+  text += '   Siparis Fisi\n';
+  text += sep;
+  text += `Siparis #: ${order.order_number || order.id}\n`;
+  text += `Saat     : ${order.time}\n`;
+  text += `Masa     : ${order.table_number}\n`;
+  text += `Musteri  : ${order.customer_name}\n`;
+  text += sep;
+  
+  // Tabaklar
+  order.plates.forEach((plate, idx) => {
+    const isCombo = plate.options && plate.options.length > 0;
+    const icon = isCombo ? '[KAMPANYA]' : '';
+    text += `\n>> ${icon} ${plate.base_name}\n`;
+    
+    // Ana waffle seçimi (kampanya ise)
+    if (isCombo) {
+      const waffleOpt = plate.options.find(o => 
+        (o.group_name || '').toLowerCase().includes('waffle') || 
+        (o.group_name || '').toLowerCase().includes('tür')
+      );
+      if (waffleOpt) {
+        text += `   WAFFLE: ${waffleOpt.name}\n`;
+      }
+    }
+    
+    // Malzemeler
+    if (plate.malzemeler && plate.malzemeler.length > 0) {
+      text += '   Malzeme:\n';
+      plate.malzemeler.forEach(m => {
+        text += `    - ${m.name}${m.free ? ' (B)' : ''}\n`;
+      });
+    }
+    
+    // İçecekler
+    if (plate.icecekler && plate.icecekler.length > 0) {
+      text += '   Icecek:\n';
+      plate.icecekler.forEach(i => {
+        text += `    - ${i.name}\n`;
+      });
+    }
+    
+    // Dondurmalar
+    if (plate.dondurmalar && plate.dondurmalar.length > 0) {
+      text += '   Dondurma:\n';
+      plate.dondurmalar.forEach(d => {
+        text += `    - ${d.name}\n`;
+      });
+    }
+    
+    // Diğer kampanya seçimleri
+    if (isCombo && plate.options) {
+      plate.options.forEach(opt => {
+        const gn = (opt.group_name || '').toLowerCase();
+        if (!gn.includes('waffle') && !gn.includes('tür')) {
+          text += `   ${opt.group_name}: ${opt.name}\n`;
+        }
+      });
+    }
+  });
+  
+  // Not
+  if (order.customer_note) {
+    text += sep;
+    text += `NOT: ${order.customer_note}\n`;
+  }
+  
+  text += sep;
+  text += `TOPLAM: ${order.total.toFixed(2)} TL\n`;
+  text += dblSep;
+  text += '  Afiyet olsun! :)\n';
+  text += '\n\n\n';
+  
+  return text;
+}
+
+// ============================================================
+// RAWBT'YE GÖNDER
+// ============================================================
+function sendToRawBT(receiptText) {
+  // Türkçe karakterleri ASCII'ye çevir (termal yazıcılar genelde Türkçe desteklemez)
+  const safeText = receiptText
+    .replace(/ı/g, 'i').replace(/İ/g, 'I')
+    .replace(/ş/g, 's').replace(/Ş/g, 'S')
+    .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+    .replace(/ü/g, 'u').replace(/Ü/g, 'U')
+    .replace(/ö/g, 'o').replace(/Ö/g, 'O')
+    .replace(/ç/g, 'c').replace(/Ç/g, 'C');
+
+  // Kullanıcının seçtiği çalışan yöntemi kullan (localStorage'da saklı)
+  const method = parseInt(localStorage.getItem('iyb_print_method') || '2');
+  sendWithMethod(safeText, method);
+}
+
+function sendWithMethod(safeText, method) {
+  let url;
+  if (method === 2) {
+    // Yöntem 2: basit rawbt: şeması (Chrome'da çalışır)
+    url = 'rawbt:' + encodeURIComponent(safeText);
+  } else if (method === 3) {
+    // Yöntem 3: intent:// + S.text extra
+    url = 'intent://rawbt/#Intent;scheme=rawbt;' +
+          'package=ru.a402d.rawbtprinter;' +
+          'S.text=' + encodeURIComponent(safeText) + ';end';
+  } else {
+    // Yöntem 1 (varsayılan): intent:// data kısmında metin
+    url = 'intent://' + encodeURIComponent(safeText) +
+          '#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end';
+  }
+  
+  try {
+    window.location.href = url;
+  } catch (e) {
+    log('❌ Yaziciya gonderilemedi (yontem ' + method + '): ' + e.message, 'error');
+  }
+}
+
+function testFormat(method) {
+  const testText = 
+    '\n      IYB WAFFLE\n   TEST FISI - Yontem ' + method + '\n' +
+    '--------------------------------\n' +
+    'Bu fis cikarsa Yontem ' + method + ' calisiyor!\n' +
+    'Asagidaki butona bas:\n' +
+    '[Yontem ' + method + ' Kaydet]\n' +
+    '--------------------------------\n\n\n';
+  
+  log('🔬 Yontem ' + method + ' deneniyor...', 'info');
+  sendWithMethod(testText, method);
+  
+  // 2 sn sonra "çalıştı mı" sor
+  setTimeout(() => {
+    if (confirm('Yontem ' + method + ' ile fis CIKTI mi?\n\nEVET = bu yontemi kaydet\nHAYIR = baska yontem dene')) {
+      localStorage.setItem('iyb_print_method', String(method));
+      const am = document.getElementById('activeMethod');
+      if (am) am.textContent = method;
+      log('✅ Yontem ' + method + ' kaydedildi! Artik bu kullanilacak.', 'success');
+      alert('✅ Yontem ' + method + ' kaydedildi!\nArtik tum fisler bu yontemle basilacak.');
+    }
+  }, 2500);
+}
+
+function toggleDiag() {
+  const p = document.getElementById('diagPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  // Aktif yöntemi göster
+  const am = document.getElementById('activeMethod');
+  if (am) am.textContent = localStorage.getItem('iyb_print_method') || '2';
+}
+
+// ============================================================
+// ANA POLLING DÖNGÜSÜ
+// ============================================================
+async function checkPending() {
+  if (isPrinting) {
+    // Önceki yazdırma bitene kadar bekle
+    return;
+  }
+  
+  try {
+    const res = await fetch('/api/printer/pending', { cache: 'no-store' });
+    const data = await res.json();
+    
+    document.getElementById('lastCheck').textContent = new Date().toLocaleTimeString('tr-TR');
+    
+    if (!data.ok) {
+      log('❌ Sunucu hatası: ' + (data.error || '?'), 'error');
+      setStatus('error', 'Sunucu Hatası');
+      return;
+    }
+    
+    setStatus('ok', 'Aktif - Dinleniyor');
+    
+    // Hem session hem de localStorage filtresi
+    const newOrders = data.orders.filter(o => 
+      !printedThisSession.has(o.id) && !permanentlyPrinted.has(o.id)
+    );
+    
+    document.getElementById('pendingCount').textContent = newOrders.length;
+    document.getElementById('bigCounter').textContent = newOrders.length;
+    document.getElementById('bigCounter').className = 'big-counter' + (newOrders.length > 0 ? ' pending' : '');
+    
+    if (newOrders.length === 0) return;
+    
+    log(`🔔 ${newOrders.length} yeni siparis bulundu`, 'info');
+    
+    // Sırayla yazdır
+    isPrinting = true;
+    for (const order of newOrders) {
+      await printOrder(order);
+      await sleep(PRINT_DELAY);
+    }
+    isPrinting = false;
+    
+  } catch (e) {
+    log('❌ Baglanti hatasi: ' + e.message, 'error');
+    setStatus('error', 'Baglanti Yok');
+  }
+}
+
+async function printOrder(order) {
+  try {
+    log(`🖨️ Basiliyor: Siparis #${order.id} - Masa ${order.table_number}`, 'info');
+    
+    // Önce session ve localStorage'a kaydet (double-check)
+    printedThisSession.add(order.id);
+    permanentlyPrinted.add(order.id);
+    
+    // localStorage'ı güncelle (max son 200 sipariş tut)
+    const arr = Array.from(permanentlyPrinted);
+    if (arr.length > 200) arr.splice(0, arr.length - 200);
+    localStorage.setItem('iyb_printed_orders', JSON.stringify(arr));
+    
+    // Sunucuda da işaretle (CRITICAL - localStorage silinirse koruma)
+    try {
+      await fetch(`/api/printer/mark-printed/${order.id}`, { method: 'POST' });
+    } catch (e) {
+      log(`⚠️ Sunucu flag set edilemedi #${order.id}`, 'error');
+    }
+    
+    // Fiş metnini oluştur
+    const receiptText = buildReceiptText(order);
+    
+    // RawBT'ye gönder
+    sendToRawBT(receiptText);
+    
+    // Sayaç
+    totalPrinted++;
+    localStorage.setItem('iyb_total_printed', String(totalPrinted));
+    document.getElementById('totalPrinted').textContent = totalPrinted;
+    
+    log(`✅ Basildi: Siparis #${order.id}`, 'success');
+    
+    // Ses çal (eğer destekleniyorsa)
+    playBeep();
+    
+  } catch (e) {
+    log(`❌ Basilamadi #${order.id}: ${e.message}`, 'error');
+  }
+}
+
+// ============================================================
+// YARDIMCILAR
+// ============================================================
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+function setStatus(type, text) {
+  const card = document.getElementById('statusCard');
+  const dot = document.getElementById('pulseDot');
+  document.getElementById('statusText').textContent = text;
+  
+  card.classList.remove('error', 'warning');
+  dot.classList.remove('red');
+  
+  if (type === 'error') {
+    card.classList.add('error');
+    dot.classList.add('red');
+  } else if (type === 'warning') {
+    card.classList.add('warning');
+  }
+}
+
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    osc.start(); osc.stop(ctx.currentTime + 0.2);
+  } catch (e) {}
+}
+
+function manualCheck() {
+  log('🔄 Manuel kontrol baslatildi', 'info');
+  checkPending();
+}
+
+function testPrint() {
+  const testOrder = {
+    id: 0,
+    order_number: 'TEST',
+    table_number: 'TEST',
+    customer_name: 'Test',
+    time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+    total: 0,
+    customer_note: 'Bu bir test fisi - RawBT baglantisini kontrol eder',
+    plates: [{
+      base_name: 'Test Waffle',
+      malzemeler: [{ name: 'Cilek', free: true }, { name: 'Muz', free: true }],
+      icecekler: [],
+      dondurmalar: [],
+      options: []
+    }]
+  };
+  log('🖨️ Test fisi gonderiliyor...', 'info');
+  const receipt = buildReceiptText(testOrder);
+  sendToRawBT(receipt);
+}
+
+async function loadRecent() {
+  try {
+    const res = await fetch('/api/printer/recent', { cache: 'no-store' });
+    const data = await res.json();
+    if (!data.ok) return;
+    
+    const html = data.orders.map(o => `
+      <div class="recent-item">
+        <div class="recent-info">
+          <span class="recent-badge ${o.is_printed ? 'printed' : 'unprinted'}">
+            ${o.is_printed ? '✅ BASILDI' : '⏳ BEKLİYOR'}
+          </span>
+          <b>#${o.id}</b> · Masa ${o.table_number}
+          <div class="meta">${o.customer_name} · ${o.time} · ${o.total.toFixed(2)} TL${o.printed_at ? ' · Basildi: ' + o.printed_at : ''}</div>
+        </div>
+        <button class="btn-reprint" onclick="reprint(${o.id})">🔄 Tekrar Bas</button>
+      </div>
+    `).join('');
+    
+    document.getElementById('recentList').innerHTML = html || '<p style="text-align:center; color:#8b9eb3;">Hic siparis yok</p>';
+  } catch (e) {
+    log('❌ Son siparisler yuklenemedi: ' + e.message, 'error');
+  }
+}
+
+async function reprint(orderId) {
+  if (!confirm('Siparis #' + orderId + ' yeniden basilsin mi?')) return;
+  try {
+    // localStorage ve session'dan kaldır
+    printedThisSession.delete(orderId);
+    permanentlyPrinted.delete(orderId);
+    const arr = Array.from(permanentlyPrinted);
+    localStorage.setItem('iyb_printed_orders', JSON.stringify(arr));
+    
+    log(`🔄 Siparis #${orderId} cekiliyor...`, 'info');
+    
+    // Siparişin tam verisini DİREKT çek (cutoff'a takılmadan)
+    const res = await fetch('/api/printer/order/' + orderId, { cache: 'no-store' });
+    const data = await res.json();
+    
+    if (!data.ok || !data.order) {
+      alert('Siparis bulunamadi: ' + (data.error || '?'));
+      return;
+    }
+    
+    // Fişi oluştur ve direkt bas
+    const receiptText = buildReceiptText(data.order);
+    sendToRawBT(receiptText);
+    
+    log(`✅ Siparis #${orderId} yeniden basildi`, 'success');
+    playBeep();
+    
+    // localStorage'a tekrar ekle (basıldı)
+    printedThisSession.add(orderId);
+    permanentlyPrinted.add(orderId);
+    const arr2 = Array.from(permanentlyPrinted);
+    if (arr2.length > 200) arr2.splice(0, arr2.length - 200);
+    localStorage.setItem('iyb_printed_orders', JSON.stringify(arr2));
+    
+    // Recent listeyi yenile
+    setTimeout(loadRecent, 1000);
+    
+  } catch (e) {
+    log(`❌ Yeniden basilamadi #${orderId}: ${e.message}`, 'error');
+    alert('Baglanti hatasi: ' + e.message);
+  }
+}
+
+// ============================================================
+// BAŞLAT
+// ============================================================
+window.addEventListener('load', () => {
+  log('🚀 Yazici botu baslatildi', 'success');
+  log(`⏱️ Polling: ${POLL_INTERVAL/1000} sn`, 'info');
+  log(`📦 localStorage'da ${permanentlyPrinted.size} basilmis siparis kayitli`, 'info');
+  
+  requestWakeLock();
+  setInterval(() => {
+    if (!wakeLock || wakeLock.released) requestWakeLock();
+  }, WAKE_LOCK_RETRY);
+  
+  // İlk kontrol
+  setTimeout(checkPending, 1000);
+  
+  // Sürekli polling
+  setInterval(checkPending, POLL_INTERVAL);
+  
+  // Recent listeyi yükle ve 30 sn'de bir yenile
+  loadRecent();
+  setInterval(loadRecent, 30000);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1713 @@
+{% extends "base.html" %}
+{% block title %}iyb waffle — Masa {{ table.table_number }}{% endblock %}
+{% block head %}
+<style>
+@media (prefers-color-scheme: dark) {
+  body { background: linear-gradient(135deg, #fff5f8, #ffe8f0, #fff0f5) !important; color: #2d1b2e !important; }
+}
+
+* { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+
+html, body { overflow-x: hidden; }
+
+body { 
+  background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 50%, #fff0f5 100%);
+  padding-bottom: 140px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.container { max-width: 460px; margin: 0 auto; padding: 0 12px; width: 100%; }
+
+.hero { text-align: center; padding: 18px 0 12px; }
+.hero .brand-logo { 
+  font-size: 30px; font-weight: 900; 
+  background: linear-gradient(135deg, #ff4d8c, #ff6b9d, #ff8db5);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -1px;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.masa-badge { 
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, #ff4d8c, #ff8db5);
+  color: white; padding: 7px 16px; border-radius: 999px; 
+  font-weight: 700; font-size: 13px;
+  box-shadow: 0 4px 14px rgba(255, 77, 140, 0.4);
+  margin-top: 6px;
+}
+
+.session-timer {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #d63384;
+  padding: 6px 14px; border-radius: 999px;
+  font-weight: 800; font-size: 13px;
+  margin-top: 8px; margin-left: 6px;
+  box-shadow: 0 2px 8px rgba(255, 107, 157, 0.2);
+  border: 1px solid rgba(255, 107, 157, 0.3);
+  transition: all 0.3s;
+}
+.session-timer.warning {
+  background: linear-gradient(135deg, #ffc107, #ff9800);
+  color: white;
+  animation: pulse 1s ease-in-out infinite;
+  border-color: transparent;
+}
+.session-timer.danger {
+  background: linear-gradient(135deg, #dc3545, #ff4d8c);
+  color: white;
+  animation: pulse 0.6s ease-in-out infinite;
+  border-color: transparent;
+}
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+.section { 
+  background: rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  border-radius: 24px; padding: 18px; margin-bottom: 14px;
+  box-shadow: 0 8px 32px rgba(255, 107, 157, 0.15);
+  width: 100%;
+}
+.section-h { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.section-num { 
+  background: linear-gradient(135deg, #ff4d8c, #ff8db5);
+  color: white; width: 34px; height: 34px; border-radius: 50%; 
+  display: flex; align-items: center; justify-content: center; 
+  font-weight: 800; font-size: 16px;
+  flex-shrink: 0;
+}
+.section-title { font-size: 17px; font-weight: 800; color: #d63384; }
+.section-sub { color: #a86b8a; font-size: 12px; margin-top: 2px; }
+
+.optional-info {
+  background: linear-gradient(135deg, #fff8e1, #fff3cd);
+  border: 2px dashed #ffa500;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #856404;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
+/* ============ 🎁 KAMPANYA BÖLÜMÜ (yanıp sönen) ============ */
+.campaigns-section {
+  background: linear-gradient(135deg, #ff4d8c, #ff8db5, #ff6b9d);
+  background-size: 200% 200%;
+  animation: campaignGradient 4s ease infinite;
+  border-radius: 24px;
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 12px 36px rgba(255, 77, 140, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+@keyframes campaignGradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.campaigns-section::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 50%);
+  animation: campaignRotate 12s linear infinite;
+  pointer-events: none;
+}
+@keyframes campaignRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.campaigns-title {
+  text-align: center; color: white;
+  font-size: 22px; font-weight: 900;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  position: relative; z-index: 1;
+}
+.campaigns-subtitle {
+  text-align: center; color: rgba(255,255,255,0.95);
+  font-size: 12px; font-weight: 600;
+  margin: 4px 0 14px 0;
+  position: relative; z-index: 1;
+}
+.campaigns-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  position: relative; z-index: 1;
+}
+.campaign-card {
+  background: white;
+  border-radius: 16px;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  border: 3px solid transparent;
+}
+.campaign-card::before {
+  content: '⭐ ÖZEL';
+  position: absolute;
+  top: 8px; left: 8px;
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  color: white;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 999px;
+  z-index: 5;
+  box-shadow: 0 2px 6px rgba(255,165,0,0.5);
+}
+.campaign-card:active { transform: scale(0.96); }
+.campaign-card.out-of-stock {
+  opacity: 0.5; cursor: not-allowed;
+}
+.campaign-card.out-of-stock::after {
+  content: '❌ BİTTİ';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(220, 53, 69, 0.95);
+  color: white; padding: 8px 14px;
+  border-radius: 10px; font-size: 13px; font-weight: 800;
+  z-index: 10; white-space: nowrap;
+}
+.campaign-photo {
+  width: 100%; height: 100px;
+  border-radius: 12px;
+  object-fit: cover;
+  margin-bottom: 8px;
+  background: #fff5f8;
+}
+.campaign-emoji-fallback {
+  width: 100%; height: 100px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fff5f8, #ffeaf2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 50px;
+  margin-bottom: 8px;
+}
+.campaign-name {
+  font-weight: 800; font-size: 13px;
+  color: #2d1b2e; line-height: 1.2;
+  min-height: 32px;
+  display: flex; align-items: center; justify-content: center;
+}
+.campaign-price {
+  background: linear-gradient(135deg, #ff4d8c, #ff8db5);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 15px;
+  margin: 8px auto 0;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(255,77,140,0.3);
+}
+
+/* ============ MODAL ============ */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+.modal-backdrop.show { display: flex; }
+.modal {
+  background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%);
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 24px 24px 0 0;
+  padding: 0;
+  animation: slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-header {
+  position: sticky; top: 0;
+  background: linear-gradient(135deg, #ff4d8c, #ff8db5);
+  color: white;
+  padding: 16px 18px;
+  border-radius: 24px 24px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+}
+.modal-header h2 {
+  font-size: 17px; font-weight: 900; letter-spacing: -0.3px;
+  margin: 0;
+}
+.modal-close {
+  background: rgba(255,255,255,0.25);
+  border: none; color: white;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  font-size: 18px; font-weight: 900;
+  cursor: pointer;
+}
+.modal-body { padding: 16px 18px 100px; }
+.modal-foot {
+  position: sticky; bottom: 0;
+  background: rgba(255,255,255,0.97);
+  padding: 12px 18px;
+  display: flex; gap: 10px;
+  border-top: 1px solid #ffd6e3;
+}
+.modal-foot .total {
+  flex: 1;
+  font-weight: 900;
+  font-size: 18px;
+  color: #d63384;
+}
+.modal-foot .total small { display: block; font-size: 10px; color: #888; font-weight: 600; }
+.modal-foot .btn-confirm {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(40,167,69,0.35);
+}
+.modal-foot .btn-confirm:disabled { opacity: 0.5; }
+
+/* Modal içindeki opsiyon grup gösterimi */
+.opt-group {
+  background: white;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: 2px solid #ffd6e3;
+}
+.opt-group-title {
+  font-weight: 900; color: #d63384;
+  font-size: 14px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.opt-required-badge {
+  background: #dc3545; color: white;
+  font-size: 9px; font-weight: 800;
+  padding: 2px 6px; border-radius: 999px;
+}
+.opt-items {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.opt-item {
+  background: linear-gradient(135deg, #fff5f8, #ffe8f0);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+.opt-item:active { transform: scale(0.95); }
+.opt-item.selected {
+  background: linear-gradient(135deg, #ff4d8c, #ff8db5);
+  color: white;
+  border-color: #d63384;
+  box-shadow: 0 4px 14px rgba(255,77,140,0.4);
+}
+.opt-item.selected::after {
+  content: '✓'; position: absolute;
+  top: 4px; right: 6px;
+  font-weight: 900; font-size: 14px; color: white;
+}
+.opt-item-name { font-size: 13px; font-weight: 700; }
+.opt-item-price { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+.opt-item.selected .opt-item-price { color: white; }
+
+/* ============ TABAN ============ */
+.base-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.base-card { 
+  background: linear-gradient(135deg, #fff5f8, #ffeaf2);
+  border: 3px solid transparent; border-radius: 18px;
+  padding: 18px 14px;
+  text-align: center; cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative; overflow: hidden;
+  min-width: 0;
+}
+.base-card:active { transform: scale(0.96); }
+.base-card.selected { 
+  border-color: #ff4d8c;
+  background: linear-gradient(135deg, #ffd6e3, #ffb8d1);
+  box-shadow: 0 8px 24px rgba(255, 77, 140, 0.4);
+  transform: scale(1.02);
+}
+.base-card.out-of-stock { background: #f5f5f5; opacity: 0.5; cursor: not-allowed; position: relative; }
+.base-card.out-of-stock::after { content: '❌ BİTTİ'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(220, 53, 69, 0.95); color: white; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 800; z-index: 10; white-space: nowrap; }
+.base-photo { width: 100%; height: 140px; border-radius: 14px; object-fit: cover; margin-bottom: 10px; background: #fff; box-shadow: 0 2px 8px rgba(255,107,157,0.15); }
+.base-emoji-fallback { width: 100%; height: 140px; border-radius: 14px; background: linear-gradient(135deg, #ffd6e3, #ffeaf2); display: flex; align-items: center; justify-content: center; font-size: 64px; margin-bottom: 10px; }
+.base-name { font-weight: 800; font-size: 15px; margin-top: 6px; color: #2d1b2e; }
+.base-price { color: #d63384; font-weight: 800; font-size: 16px; margin-top: 3px; }
+.base-desc { font-size: 11px; color: #888; margin-top: 5px; line-height: 1.3; }
+
+.builder { display: flex; gap: 12px; margin-bottom: 14px; }
+.plate-col { flex: 0 0 165px; position: relative; }
+.list-col { flex: 1; background: linear-gradient(135deg, #fff5f8, #ffe8f0); border-radius: 16px; padding: 10px; max-height: 220px; overflow-y: auto; font-size: 12px; min-width: 0; }
+.list-empty { color: #b89aa8; font-size: 12px; text-align: center; padding: 50px 10px; line-height: 1.4; }
+.list-cat-block { margin-bottom: 8px; }
+.list-cat-name { font-size: 11px; font-weight: 800; color: #d63384; margin-bottom: 4px; text-transform: uppercase; }
+.list-ing { background: white; padding: 5px 9px; border-radius: 9px; margin: 3px 0; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+.plate { 
+  width: 165px; height: 165px;
+  background: 
+    radial-gradient(circle at 30% 25%, rgba(255,255,255,0.98), transparent 45%),
+    radial-gradient(circle at 50% 50%, #ffd9e8 0%, #ffb8d1 70%, #ff8db5 100%);
+  border-radius: 50%;
+  box-shadow: 
+    0 14px 36px rgba(255, 77, 140, 0.45),
+    inset 0 -10px 18px rgba(255, 107, 157, 0.35),
+    inset 0 6px 14px rgba(255, 255, 255, 0.7);
+  position: relative; 
+  border: 5px solid white;
+  overflow: hidden;
+}
+.plate-label { 
+  position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); 
+  font-size: 11px; color: #d63384; font-weight: 800; 
+  white-space: nowrap; background: white; padding: 3px 10px; border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(255,107,157,0.25);
+  z-index: 5;
+}
+.plate-item { 
+  position: absolute; width: 34px; height: 34px; border-radius: 50%; 
+  background: white; display: flex; align-items: center; justify-content: center; 
+  font-size: 18px; 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+  overflow: hidden;
+}
+.plate-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+.cat-tabs-wrap { position: sticky; top: 0; z-index: 50; padding: 8px 0; background: linear-gradient(180deg, rgba(255,245,248,0.95), rgba(255,245,248,0.8)); border-radius: 12px; margin-bottom: 6px; }
+.cat-tabs { display: flex; gap: 7px; overflow-x: auto; padding: 2px; }
+.cat-tabs::-webkit-scrollbar { display: none; }
+.cat-tab { flex: 0 0 auto; background: white; border: 2px solid #ffd6e3; padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: 12px; cursor: pointer; white-space: nowrap; transition: all 0.25s; color: #2d1b2e; }
+.cat-tab.active { background: linear-gradient(135deg, #ff4d8c, #ff8db5); color: white; border-color: #ff4d8c; }
+
+.cat-info { background: linear-gradient(135deg, #fff5f8, #ffe8f0); padding: 9px 14px; border-radius: 12px; font-size: 12px; color: #d63384; font-weight: 600; margin-bottom: 10px; }
+
+.ing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ing-item { background: white; border: 2px solid transparent; border-radius: 14px; padding: 8px 6px; text-align: center; cursor: pointer; position: relative; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 2px 8px rgba(255,107,157,0.08); min-width: 0; }
+.ing-item:active { transform: scale(0.92); }
+.ing-item.selected { background: linear-gradient(135deg, #ff4d8c, #ff8db5); color: white; border-color: #d63384; }
+.ing-item.selected .ing-name, .ing-item.selected .ing-price-mini { color: white; }
+.ing-item.selected::after { content: '✓'; position: absolute; top: 4px; right: 6px; font-weight: 900; font-size: 14px; color: white; }
+.ing-item.out-of-stock { background: #f5f5f5; opacity: 0.5; cursor: not-allowed; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.ing-item.out-of-stock::before { content: '❌ BİTTİ'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(220, 53, 69, 0.95); color: white; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; z-index: 10; white-space: nowrap; }
+.ing-photo { width: 100%; height: 60px; border-radius: 10px; object-fit: cover; margin-bottom: 4px; background: #fff5f8; }
+.ing-emoji-fallback { width: 100%; height: 60px; border-radius: 10px; background: linear-gradient(135deg, #fff5f8, #ffeaf2); display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 4px; }
+.ing-item.selected .ing-emoji-fallback { background: rgba(255,255,255,0.25); }
+.ing-name { font-size: 11px; margin-top: 2px; font-weight: 700; line-height: 1.15; color: #2d1b2e; word-break: break-word; }
+.ing-price-mini { font-size: 10px; color: #d63384; font-weight: 700; margin-top: 2px; }
+
+.cart-line { background: linear-gradient(135deg, #fff5f8, #ffe8f0); padding: 12px; border-radius: 14px; margin-bottom: 8px; font-size: 13px; }
+.cart-line.is-combo { background: linear-gradient(135deg, #fff4f9, #ffe0ec); border-left: 4px solid #ff4d8c; }
+.cart-line .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.cart-line b { color: #d63384; font-size: 14px; }
+.cart-line .price { color: #d63384; font-weight: 800; font-size: 15px; }
+.cart-line .ings { font-size: 12px; color: #6b4a5d; margin-top: 6px; line-height: 1.4; word-break: break-word; }
+.cart-line .free-choice { font-size: 12px; color: #28a745; margin-top: 4px; font-weight: 700; }
+.cart-line .remove { background: rgba(255,179,197,0.3); border: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+.add-plate-btn { background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 12px 14px; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; font-size: 14px; width: 100%; margin-top: 8px; box-shadow: 0 6px 16px rgba(40,167,69,0.35); }
+
+.bev-section, .dessert-section {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 24px; 
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 32px rgba(255, 107, 157, 0.15);
+  width: 100%;
+  overflow: hidden;
+}
+.dessert-section {
+  background: linear-gradient(135deg, rgba(255,228,236,0.95), rgba(255,243,224,0.95));
+  border: 2px solid #ffd6e3;
+}
+.bev-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; }
+.bev-item {
+  display: flex; gap: 8px; align-items: center;
+  padding: 10px; background: white; border-radius: 14px;
+  cursor: pointer; border: 2px solid transparent;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 8px rgba(255,107,157,0.08);
+  min-width: 0; min-height: 72px;
+}
+.bev-item:active { transform: scale(0.96); }
+.bev-item.selected { background: linear-gradient(135deg, #ff4d8c, #ff8db5); color: white; border-color: #d63384; }
+.bev-item.selected .bev-name, .bev-item.selected .bev-price, .bev-item.selected .bev-check { color: white; }
+.bev-item.dessert-item.selected { background: linear-gradient(135deg, #d63384, #ff6b9d); }
+.bev-item.out-of-stock { background: #f5f5f5; opacity: 0.5; cursor: not-allowed; position: relative; }
+.bev-item.out-of-stock::after { content: '❌ BİTTİ'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(220, 53, 69, 0.95); color: white; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; z-index: 10; white-space: nowrap; }
+.bev-photo { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+.bev-emoji-fallback { width: 44px; height: 44px; border-radius: 10px; background: #fff5f8; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+.bev-item.selected .bev-emoji-fallback { background: rgba(255,255,255,0.25); }
+.bev-info { flex: 1; min-width: 0; }
+.bev-name { font-weight: 800; font-size: 12px; color: #2d1b2e; line-height: 1.25; word-break: break-word; }
+.bev-price { font-size: 11px; color: #888; display: block; margin-top: 2px; }
+.bev-check { font-size: 20px; color: #ccc; transition: color 0.2s; flex-shrink: 0; }
+.bev-item.selected .bev-check::before { content: '●'; }
+.bev-item:not(.selected) .bev-check::before { content: '○'; }
+
+input, textarea, select { width: 100%; padding: 12px 14px; border: 2px solid #ffd6e3; border-radius: 12px; font-size: 16px; background: white; color: #2d1b2e; -webkit-appearance: none; appearance: none; }
+input:focus { outline: none; border-color: #ff4d8c; }
+label { display: block; color: #6b4a5d; font-weight: 600; font-size: 13px; margin-bottom: 5px; margin-top: 4px; }
+
+.bottom-bar { 
+  position: fixed; bottom: 12px; left: 12px; right: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 14px 18px; border-radius: 20px;
+  box-shadow: 0 12px 36px rgba(255, 77, 140, 0.25);
+  z-index: 100; display: flex; gap: 12px; align-items: center;
+  max-width: 460px; margin: 0 auto;
+}
+.total-info { flex: 1; min-width: 0; }
+.total-info small { color: #a86b8a; font-size: 11px; display: block; font-weight: 600; }
+.total-info b { font-size: 24px; color: #d63384; font-weight: 900; }
+.send-btn { background: linear-gradient(135deg, #ff4d8c, #ff8db5); color: white; padding: 14px 20px; border: none; border-radius: 14px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 6px 18px rgba(255,77,140,0.5); white-space: nowrap; }
+.send-btn:disabled { opacity: 0.5; }
+
+.flying { position: fixed; z-index: 1000; pointer-events: none; width: 34px; height: 34px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden; box-shadow: 0 6px 16px rgba(255,77,140,0.4); }
+.flying img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+.success-screen { text-align: center; padding: 60px 20px; }
+.success-icon { font-size: 90px; animation: bounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes bounce { 0% { transform: scale(0); } 60% { transform: scale(1.3); } 100% { transform: scale(1); } }
+.success-card { background: white; padding: 24px; border-radius: 20px; max-width: 320px; margin: 24px auto; box-shadow: 0 12px 36px rgba(255,77,140,0.2); }
+
+.expired-screen {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 50%, #fff0f5 100%);
+  z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 30px 20px; text-align: center;
+}
+.expired-icon { font-size: 100px; animation: shake 1s ease-in-out infinite; }
+@keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } }
+.expired-title { color: #d63384; font-size: 32px; font-weight: 900; margin: 20px 0 10px; letter-spacing: -1px; }
+.expired-text { color: #6b4a5d; font-size: 16px; max-width: 320px; line-height: 1.6; }
+.expired-qr-box { background: white; padding: 30px 24px; border-radius: 24px; margin: 30px auto; max-width: 320px; box-shadow: 0 16px 40px rgba(255,77,140,0.25); border: 3px dashed #ff4d8c; }
+.expired-qr-icon { font-size: 64px; }
+.expired-qr-text { color: #d63384; font-weight: 800; font-size: 18px; margin-top: 12px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="hero">
+    <div class="brand-logo">iyb waffle 🧇</div>
+    <div>
+      <div class="masa-badge">🪑 Masa {{ table.table_number }}</div>
+      <div class="session-timer" id="sessionTimer">⏱️ 5:00</div>
+    </div>
+  </div>
+
+  <!-- 🎁 KAMPANYALAR (en üstte gösterişli) -->
+  {% if campaign_products %}
+  <div class="campaigns-section">
+    <div class="campaigns-title">🎉 BUGÜNE ÖZEL KAMPANYALAR! 🎉</div>
+    <div class="campaigns-subtitle">⚡ Sınırlı süre · Fırsatı kaçırma!</div>
+    <div class="campaigns-grid">
+      {% for c in campaign_products %}
+      <div class="campaign-card {% if c.is_out_of_stock %}out-of-stock{% endif %}" 
+           data-id="{{ c.id }}" 
+           data-name="{{ c.name }}" 
+           data-price="{{ c.base_price }}"
+           data-img="{{ c.image_url or '' }}"
+           data-copy-from="{{ c.copy_rules_from_product_id or '' }}"
+           onclick="openCampaignModal({{ c.id }})">
+        {% if c.image_url %}
+          <img class="campaign-photo" src="{{ c.image_url }}" alt="{{ c.name }}">
+        {% else %}
+          <div class="campaign-emoji-fallback">🎁</div>
+        {% endif %}
+        <div class="campaign-name">{{ c.name }}</div>
+        {% if c.description %}<div style="font-size:10px; color:#888; margin-top:2px;">{{ c.description }}</div>{% endif %}
+        <div class="campaign-price">{{ "%.0f"|format(c.base_price|float) }} TL</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ADIM 1: TABAN -->
+  {% if base_products %}
+  <div class="section">
+    <div class="section-h">
+      <div class="section-num">1</div>
+      <div>
+        <div class="section-title">Waffle Tabanını Seç</div>
+        <div class="section-sub">Sadece içecek/dondurma istiyorsan bu adımı atla</div>
+      </div>
+    </div>
+    <div class="optional-info">
+      💡 Waffle yapacaksan: Taban + en az 1 malzeme seç. Sadece içecek/dondurma için bu kısmı boş bırakabilirsin.
+    </div>
+    <div class="base-grid">
+      {% for p in base_products %}
+      <div class="base-card {% if p.is_out_of_stock %}out-of-stock{% endif %}" data-id="{{ p.id }}" data-name="{{ p.name }}" data-price="{{ p.base_price }}" data-img="{{ p.image_url or '' }}">
+        {% if p.image_url %}
+          <img class="base-photo" src="{{ p.image_url }}" alt="{{ p.name }}">
+        {% else %}
+          <div class="base-emoji-fallback">🧇</div>
+        {% endif %}
+        <div class="base-name">{{ p.name }}</div>
+        <div class="base-price">{{ p.base_price }} TL</div>
+        {% if p.description %}<div class="base-desc">{{ p.description }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ADIM 2: MALZEME -->
+  {% if ingredient_cats %}
+  <div class="section">
+    <div class="section-h">
+      <div class="section-num">2</div>
+      <div>
+        <div class="section-title">Malzemelerini Seç 🍓</div>
+        <div class="section-sub">Önce waffle tabanı seç · Tıkla, tabağa uçsun</div>
+      </div>
+    </div>
+
+    <div class="builder">
+      <div class="plate-col">
+        <div class="plate" id="plate">
+          <div class="plate-label" id="plateLabel">—</div>
+        </div>
+      </div>
+      <div class="list-col">
+        <div id="ingList"><div class="list-empty">🍽️<br>Henüz malzeme<br>seçilmedi</div></div>
+      </div>
+    </div>
+
+    <div class="cat-tabs-wrap">
+      <div class="cat-tabs" id="catTabs">
+        {% for c in ingredient_cats %}
+        <div class="cat-tab" data-cat="{{ c.id }}">{{ c.icon or '🍓' }} {{ c.name }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% for c in ingredient_cats %}
+    <div class="cat-panel" data-cat="{{ c.id }}" style="{% if not loop.first %}display:none{% endif %}">
+      {% if c.rule %}
+      <div class="cat-info">
+        {% if c.rule.use_own_price %}
+          ⚡ İlk {{ c.rule.free_count }} tanesi ÜCRETSİZ · sonrası kendi fiyatından
+        {% else %}
+          ⚡ İlk {{ c.rule.free_count }} tanesi ÜCRETSİZ · sonrası +{{ c.rule.extra_price }} TL
+        {% endif %}
+      </div>
+      {% endif %}
+      <div class="ing-grid">
+        {% for p in c.products if p.is_active %}
+        <div class="ing-item {% if p.is_out_of_stock %}out-of-stock{% endif %}" 
+             data-id="{{ p.id }}" 
+             data-name="{{ p.name }}" 
+             data-cat="{{ c.id }}"
+             data-img="{{ p.image_url or '' }}"
+             data-own-price="{{ p.base_price or 0 }}"
+             data-has-rule="{% if c.rule %}1{% else %}0{% endif %}"
+             data-use-own="{% if c.rule and c.rule.use_own_price %}1{% else %}0{% endif %}"
+             data-free="{{ c.rule.free_count if c.rule else 0 }}"
+             data-extra="{{ c.rule.extra_price if c.rule else 0 }}">
+          {% if p.image_url %}
+            <img class="ing-photo" src="{{ p.image_url }}" alt="{{ p.name }}">
+          {% else %}
+            <div class="ing-emoji-fallback">{% if 'çilek' in p.name|lower %}🍓{% elif 'muz' in p.name|lower %}🍌{% elif 'çikolata' in p.name|lower %}🍫{% elif 'bal' in p.name|lower %}🍯{% elif 'karamel' in p.name|lower %}✨{% elif 'fındık' in p.name|lower or 'badem' in p.name|lower or 'fıstık' in p.name|lower %}✨{% elif 'elma' in p.name|lower %}🍎{% elif 'ananas' in p.name|lower %}🍍{% else %}✨{% endif %}</div>
+          {% endif %}
+          <div class="ing-name">{{ p.name }}</div>
+          {% if c.rule and c.rule.use_own_price and p.base_price %}
+            <div class="ing-price-mini">{{ p.base_price }}₺</div>
+          {% elif not c.rule and p.base_price %}
+            <div class="ing-price-mini">{{ p.base_price }}₺</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+    <button class="add-plate-btn" id="addPlateBtn">➕ Bu Tabağı Sepete Ekle</button>
+  </div>
+  {% endif %}
+
+  <!-- İÇECEKLER -->
+  {% if beverage_cats %}
+  {% for cat in beverage_cats %}
+    {% set active_products = cat.products | selectattr('is_active') | list %}
+    {% if active_products %}
+    <div class="bev-section">
+      <div class="section-h">
+        <div class="section-num" style="font-size:18px;">{{ cat.icon or '🥤' }}</div>
+        <div>
+          <div class="section-title">{{ cat.name }}</div>
+          <div class="section-sub">Tek başına da sipariş edilebilir</div>
+        </div>
+      </div>
+      <div class="bev-grid">
+        {% for prod in active_products %}
+        <div class="bev-item {% if prod.is_out_of_stock %}out-of-stock{% endif %}" 
+             data-id="{{ prod.id }}" 
+             data-price="{{ prod.base_price }}" 
+             data-name="{{ prod.name }}"
+             data-img="{{ prod.image_url or '' }}"
+             onclick="toggleStandalone(this)">
+          {% if prod.image_url %}
+            <img class="bev-photo" src="{{ prod.image_url }}" alt="{{ prod.name }}">
+          {% else %}
+            <div class="bev-emoji-fallback">{{ cat.icon or '🥤' }}</div>
+          {% endif %}
+          <div class="bev-info">
+            <div class="bev-name">{{ prod.name }}</div>
+            <span class="bev-price">{{ prod.base_price }} TL</span>
+          </div>
+          <div class="bev-check"></div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  {% endfor %}
+  {% endif %}
+
+  <!-- DONDURMA -->
+  {% if dessert_cats %}
+  <div class="dessert-section">
+    <div class="section-h">
+      <div class="section-num">🍦</div>
+      <div>
+        <div class="section-title">Dondurmalar</div>
+        <div class="section-sub">Tek başına da sipariş edilebilir</div>
+      </div>
+    </div>
+    <div class="bev-grid">
+      {% for cat in dessert_cats %}
+        {% for prod in cat.products if prod.is_active %}
+        <div class="bev-item dessert-item {% if prod.is_out_of_stock %}out-of-stock{% endif %}" 
+             data-id="{{ prod.id }}" 
+             data-price="{{ prod.base_price }}" 
+             data-name="{{ prod.name }}"
+             data-img="{{ prod.image_url or '' }}"
+             onclick="toggleStandalone(this)">
+          {% if prod.image_url %}
+            <img class="bev-photo" src="{{ prod.image_url }}" alt="{{ prod.name }}">
+          {% else %}
+            <div class="bev-emoji-fallback">{{ cat.icon or '🍦' }}</div>
+          {% endif %}
+          <div class="bev-info">
+            <div class="bev-name">{{ prod.name }}</div>
+            <span class="bev-price">{{ prod.base_price }} TL</span>
+          </div>
+          <div class="bev-check"></div>
+        </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- SEPET -->
+  <div class="section" id="cartSection" style="display:none;">
+    <div class="section-h">
+      <div class="section-num">🛒</div>
+      <div>
+        <div class="section-title">Sepetim</div>
+        <div class="section-sub" id="cartCountSub">0 kalem</div>
+      </div>
+    </div>
+    <div id="cartList"></div>
+  </div>
+
+  <!-- ADIM 3: BİLGİ -->
+  <div class="section">
+    <div class="section-h">
+      <div class="section-num">3</div>
+      <div>
+        <div class="section-title">Bilgilerin 📞</div>
+        <div class="section-sub">Adın soyadın zorunlu</div>
+      </div>
+    </div>
+    <label>👤 İsim Soyisim *</label>
+    <input id="customerName" type="text" placeholder="Örn: Ali Kadaci" autocomplete="name" required>
+    <label>📝 Sipariş Notu (opsiyonel)</label>
+    <input id="orderNote" type="text" placeholder="Örn: meyveler bol olsun">
+  </div>
+</div>
+
+<!-- 🎁 KAMPANYA MODAL -->
+<div class="modal-backdrop" id="campaignModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">🎁 Kampanya</h2>
+      <button class="modal-close" onclick="closeCampaignModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <!-- JS doldurur -->
+    </div>
+    <div class="modal-foot">
+      <div class="total">
+        <small>Kampanya Fiyatı</small>
+        <span id="modalTotal">0 TL</span>
+      </div>
+      <button class="btn-confirm" id="modalConfirmBtn" onclick="confirmCampaign()" disabled>
+        ✅ Sepete Ekle
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <div class="total-info">
+    <small>Toplam Tutar</small>
+    <b id="totalLabel">0 TL</b>
+  </div>
+  <button class="send-btn" id="sendBtn">🚀 Sipariş Ver</button>
+</div>
+
+<script>
+const TABLE_ID = {{ table.id }};
+const SESSION_TIMEOUT_SEC = {{ session_timeout }};
+const SESSION_END_MS = Date.now() + SESSION_TIMEOUT_SEC * 1000;
+let sessionExpired = false;
+
+// 🎁 Backend'den gelen veriler
+const PRODUCTS_WITH_OPTIONS = {{ products_with_options | tojson }};
+const CAMPAIGN_COPY_RULES = {{ campaign_copy_rules | tojson }};
+
+// Geri tuşu engeli
+history.pushState(null, '', location.href);
+window.addEventListener('popstate', () => {
+  history.pushState(null, '', location.href);
+});
+
+let selectedBase = null;
+let selectedIngs = new Map();
+let cart = [];
+
+// === 5DK GERİ SAYIM ===
+function updateSessionTimer() {
+  if (sessionExpired) return;
+  const remaining = Math.max(0, Math.floor((SESSION_END_MS - Date.now()) / 1000));
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  const el = document.getElementById('sessionTimer');
+  if (el) {
+    el.textContent = `⏱️ ${m}:${s.toString().padStart(2,'0')}`;
+    el.classList.remove('warning', 'danger');
+    if (remaining <= 30) el.classList.add('danger');
+    else if (remaining <= 60) el.classList.add('warning');
+  }
+  if (remaining === 0) {
+    sessionExpired = true;
+    showExpiredScreen();
+  }
+}
+setInterval(updateSessionTimer, 1000);
+updateSessionTimer();
+
+// === STOK POLLING ===
+async function pollStockStatus() {
+  if (sessionExpired) return;
+  try {
+    const res = await fetch('/api/stock-status');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.ok || !data.stock) return;
+    const stockMap = data.stock;
+    document.querySelectorAll('.ing-item, .bev-item, .base-card, .campaign-card').forEach(item => {
+      const id = item.dataset.id;
+      if (!id) return;
+      const isOut = stockMap[id] === true;
+      const wasOut = item.classList.contains('out-of-stock');
+      if (isOut && !wasOut) {
+        item.classList.add('out-of-stock');
+      } else if (!isOut && wasOut) {
+        item.classList.remove('out-of-stock');
+      }
+    });
+  } catch (e) {
+    console.log('Stok polling hatası:', e);
+  }
+}
+setInterval(pollStockStatus, 8000);
+pollStockStatus();
+
+function showExpiredScreen(customMessage) {
+  sessionExpired = true;
+  const screen = document.createElement('div');
+  screen.className = 'expired-screen';
+  screen.innerHTML = `
+    <div class="expired-icon">⏰</div>
+    <h1 class="expired-title">Süre Doldu!</h1>
+    <p class="expired-text">${customMessage || 'Sipariş süresi (5 dakika) doldu. Devam etmek için QR kodu tekrar okutman gerekiyor.'}</p>
+    <div class="expired-qr-box">
+      <div class="expired-qr-icon">📱</div>
+      <div class="expired-qr-text">QR Kodu Tekrar Okut</div>
+    </div>
+  `;
+  document.body.appendChild(screen);
+  document.querySelector('.bottom-bar').style.display = 'none';
+}
+
+// ============ STANDALONE TOGGLE ============
+function toggleStandalone(el) {
+  if (sessionExpired) return;
+  if (el.classList.contains('out-of-stock')) {
+    alert('❌ Bu ürün STOKTA YOK\n\n' + el.dataset.name);
+    return;
+  }
+  el.classList.toggle('selected');
+  updateTotal();
+}
+
+function getSelectedStandalone() {
+  const items = document.querySelectorAll('.bev-item.selected');
+  return Array.from(items).map(el => ({
+    id: parseInt(el.dataset.id),
+    price: parseFloat(el.dataset.price),
+    name: el.dataset.name,
+    img: el.dataset.img || ''
+  }));
+}
+
+function getStandaloneTotal() {
+  return getSelectedStandalone().reduce((s, b) => s + b.price, 0);
+}
+
+// ============ KATEGORI TAB ============
+document.querySelectorAll('.cat-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.cat-panel').forEach(p => {
+      p.style.display = p.dataset.cat === tab.dataset.cat ? 'block' : 'none';
+    });
+  });
+});
+document.querySelector('.cat-tab')?.classList.add('active');
+
+// ============ BASE CARD SELECT ============
+document.querySelectorAll('.base-card').forEach(card => {
+  card.addEventListener('click', () => {
+    if (sessionExpired) return;
+    if (card.classList.contains('out-of-stock')) {
+      alert('❌ Bu waffle STOKTA YOK\n\n' + card.dataset.name);
+      return;
+    }
+    const isSelected = card.classList.contains('selected');
+    document.querySelectorAll('.base-card').forEach(c => c.classList.remove('selected'));
+    if (isSelected) {
+      selectedBase = null;
+      document.getElementById('plateLabel').textContent = '—';
+      selectedIngs.forEach(d => d.plateEl?.remove());
+      selectedIngs.clear();
+      document.querySelectorAll('.ing-item').forEach(i => i.classList.remove('selected'));
+      refreshIngList();
+    } else {
+      card.classList.add('selected');
+      selectedBase = {
+        id: parseInt(card.dataset.id),
+        name: card.dataset.name,
+        price: parseFloat(card.dataset.price),
+        img: card.dataset.img || ''
+      };
+      document.getElementById('plateLabel').textContent = selectedBase.name;
+      if (window.gsap) gsap.fromTo('#plate', {scale: 0.9}, {scale: 1, duration: 0.4, ease: 'elastic.out(1.2, 0.5)'});
+    }
+    updateTotal();
+  });
+});
+
+// ============ INGREDIENT SELECT ============
+document.querySelectorAll('.ing-item').forEach(item => {
+  item.addEventListener('click', () => {
+    if (sessionExpired) return;
+    if (item.classList.contains('out-of-stock')) {
+      alert('❌ Bu malzeme STOKTA YOK\n\n' + item.dataset.name);
+      return;
+    }
+    if (!selectedBase) { alert('⚠️ Önce yukarıdan bir WAFFLE TABANI seç 🧇'); return; }
+    const id = parseInt(item.dataset.id);
+    if (selectedIngs.has(id)) {
+      const data = selectedIngs.get(id);
+      if (data.plateEl) {
+        if (window.gsap) gsap.to(data.plateEl, {scale: 0, opacity: 0, duration: 0.25, onComplete: () => data.plateEl.remove()});
+        else data.plateEl.remove();
+      }
+      selectedIngs.delete(id);
+      item.classList.remove('selected');
+      refreshIngList();
+      repositionPlateItems();
+      updateTotal();
+    } else {
+      const fallbackEmoji = item.querySelector('.ing-emoji-fallback')?.textContent || '✨';
+      const ing = {
+        id: id, name: item.dataset.name,
+        cat_id: parseInt(item.dataset.cat),
+        img: item.dataset.img || '',
+        emoji: fallbackEmoji,
+        own_price: parseFloat(item.dataset.ownPrice) || 0,
+        has_rule: item.dataset.hasRule === '1',
+        use_own: item.dataset.useOwn === '1',
+        free: parseInt(item.dataset.free) || 0,
+        extra: parseFloat(item.dataset.extra) || 0
+      };
+      item.classList.add('selected');
+      selectedIngs.set(id, ing);
+      refreshIngList();
+      updateTotal();
+      flyToPlate(item, id);
+    }
+  });
+});
+
+function getPlatePosition(idx) {
+  const plate = document.getElementById('plate');
+  const plateRect = plate.getBoundingClientRect();
+  const itemSize = 34;
+  const center = plateRect.width / 2;
+  const maxRadius = (plateRect.width / 2) - (itemSize / 2) - 8;
+  if (idx === 0) return { x: center - itemSize/2, y: center - itemSize/2 };
+  const angle = idx * 2.4;
+  const radius = Math.min(maxRadius, Math.sqrt(idx) * 13);
+  return { x: center + Math.cos(angle) * radius - itemSize/2, y: center + Math.sin(angle) * radius - itemSize/2 };
+}
+
+function repositionPlateItems() {
+  const arr = Array.from(selectedIngs.values()).filter(d => d.plateEl);
+  arr.forEach((data, idx) => {
+    const pos = getPlatePosition(idx);
+    if (window.gsap) {
+      gsap.to(data.plateEl, { left: pos.x + 'px', top: pos.y + 'px', duration: 0.3 });
+    } else {
+      data.plateEl.style.left = pos.x + 'px';
+      data.plateEl.style.top = pos.y + 'px';
+    }
+  });
+}
+
+function flyToPlate(sourceEl, ingId) {
+  const ing = selectedIngs.get(ingId);
+  if (!ing) return;
+  const rect = sourceEl.getBoundingClientRect();
+  const plate = document.getElementById('plate');
+  const plateRect = plate.getBoundingClientRect();
+  const idx = Array.from(selectedIngs.keys()).indexOf(ingId);
+  const pos = getPlatePosition(idx);
+  const flier = document.createElement('div');
+  flier.className = 'flying';
+  if (ing.img) flier.innerHTML = `<img src="${ing.img}" alt="">`;
+  else flier.textContent = ing.emoji;
+  flier.style.left = (rect.left + rect.width/2 - 17) + 'px';
+  flier.style.top = (rect.top + rect.height/2 - 17) + 'px';
+  document.body.appendChild(flier);
+  const finishFly = () => {
+    flier.remove();
+    const el = document.createElement('div');
+    el.className = 'plate-item';
+    if (ing.img) el.innerHTML = `<img src="${ing.img}" alt="">`;
+    else el.textContent = ing.emoji;
+    el.style.left = pos.x + 'px';
+    el.style.top = pos.y + 'px';
+    plate.appendChild(el);
+    const data = selectedIngs.get(ingId);
+    if (data) data.plateEl = el;
+    if (window.gsap) gsap.fromTo(el, {scale: 0}, {scale: 1, duration: 0.35, ease: 'back.out(2.2)'});
+    if (window.confetti) confetti({ particleCount: 25, spread: 55, origin: { y: 0.3 }, colors: ['#ff6b9d', '#ffb3d1', '#fff', '#ff4d8c']});
+  };
+  if (window.gsap) {
+    gsap.to(flier, {
+      left: (plateRect.left + pos.x) + 'px',
+      top: (plateRect.top + pos.y) + 'px',
+      rotation: 360, scale: 1.4, duration: 0.55, ease: 'power2.in',
+      onComplete: finishFly
+    });
+  } else { setTimeout(finishFly, 100); }
+}
+
+function calcIngPrice(ing, posInCat) {
+  if (ing.has_rule) {
+    if (posInCat < ing.free) return 0;
+    if (ing.use_own) return ing.own_price;
+    return ing.extra;
+  } else {
+    return ing.own_price;
+  }
+}
+
+function refreshIngList() {
+  const list = document.getElementById('ingList');
+  if (!list) return;
+  if (selectedIngs.size === 0) {
+    list.innerHTML = '<div class="list-empty">🍽️<br>Henüz malzeme<br>seçilmedi</div>';
+    return;
+  }
+  const byCat = {};
+  Array.from(selectedIngs.values()).forEach(ing => {
+    if (!byCat[ing.cat_id]) byCat[ing.cat_id] = [];
+    byCat[ing.cat_id].push(ing);
+  });
+  let html = '';
+  Object.entries(byCat).forEach(([catId, items]) => {
+    const catTab = document.querySelector('.cat-tab[data-cat="' + catId + '"]');
+    const catName = catTab ? catTab.textContent.trim() : '';
+    html += '<div class="list-cat-block"><div class="list-cat-name">' + catName + '</div>';
+    items.forEach((ing, i) => {
+      const price = calcIngPrice(ing, i);
+      const isFree = price === 0;
+      const label = isFree ? '🆓 BEDAVA' : '+' + price.toFixed(2) + '₺';
+      const color = isFree ? '#28a745' : '#d63384';
+      const ico = ing.img ? `<img src="${ing.img}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px;">` : ing.emoji + ' ';
+      html += '<div class="list-ing"><span>' + ico + ing.name + '</span><span style="font-weight:700;color:' + color + ';">' + label + '</span></div>';
+    });
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function calcCurrentPlateTotal() {
+  if (!selectedBase) return 0;
+  let total = selectedBase.price;
+  const byCat = {};
+  Array.from(selectedIngs.values()).forEach(ing => {
+    if (!byCat[ing.cat_id]) byCat[ing.cat_id] = [];
+    byCat[ing.cat_id].push(ing);
+  });
+  Object.values(byCat).forEach(items => {
+    items.forEach((ing, i) => { total += calcIngPrice(ing, i); });
+  });
+  return total;
+}
+
+function getCartTotal() {
+  return cart.reduce((s, p) => s + p.plateTotal, 0);
+}
+
+function updateTotal() {
+  const cartTotal = getCartTotal();
+  const currentTotal = calcCurrentPlateTotal();
+  const standaloneTotal = getStandaloneTotal();
+  document.getElementById('totalLabel').textContent = (cartTotal + currentTotal + standaloneTotal).toFixed(2) + ' TL';
+}
+
+const addBtn = document.getElementById('addPlateBtn');
+if (addBtn) {
+  addBtn.addEventListener('click', () => {
+    if (sessionExpired) return;
+    if (!selectedBase) { alert('⚠️ Önce WAFFLE TABANI seç 🧇'); return; }
+    if (selectedIngs.size === 0) { alert('⚠️ En az 1 MALZEME seç 🍫'); return; }
+    const plateTotal = calcCurrentPlateTotal();
+    const byCat = {};
+    Array.from(selectedIngs.values()).forEach(ing => {
+      if (!byCat[ing.cat_id]) byCat[ing.cat_id] = [];
+      byCat[ing.cat_id].push(ing);
+    });
+    const ingsList = [];
+    Object.values(byCat).forEach(items => {
+      items.forEach((ing, i) => {
+        const price = calcIngPrice(ing, i);
+        ingsList.push({
+          ing_id: ing.id, name: ing.name, emoji: ing.emoji, img: ing.img,
+          isFree: price === 0, price: price
+        });
+      });
+    });
+    cart.push({ 
+      type: 'normal',
+      base: {...selectedBase}, 
+      ingredients: ingsList, 
+      plateTotal,
+      options: []
+    });
+    selectedIngs.forEach(d => d.plateEl?.remove());
+    selectedIngs.clear();
+    selectedBase = null;
+    document.querySelectorAll('.base-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.ing-item').forEach(i => i.classList.remove('selected'));
+    document.getElementById('plateLabel').textContent = '—';
+    refreshIngList();
+    refreshCart();
+    updateTotal();
+    if (window.confetti) confetti({ particleCount: 80, spread: 70, origin: { y: 0.5 }, colors: ['#ff6b9d','#fff','#ff4d8c','#ffd6e3']});
+    document.getElementById('cartSection').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+}
+
+function refreshCart() {
+  const section = document.getElementById('cartSection');
+  if (cart.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  document.getElementById('cartCountSub').textContent = cart.length + ' kalem hazır';
+  
+  document.getElementById('cartList').innerHTML = cart.map((p, idx) => {
+    const isCombo = p.type === 'campaign';
+    const baseImg = p.base.img ? `<img src="${p.base.img}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px;">` : (isCombo ? '🎁 ' : '🧇 ');
+    const ingsHtml = p.ingredients.map(i => {
+      const ico = i.img ? `<img src="${i.img}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;vertical-align:middle;">` : i.emoji;
+      return ico + ' ' + i.name;
+    }).join(' · ');
+    
+    // Seçilen ana waffle (kampanyada)
+    const mainWaffleHtml = (isCombo && p.base.mainWaffle)
+      ? `<div style="font-size:12px; color:#155724; margin-top:4px; font-weight:700;">🧇 ${p.base.mainWaffle}</div>`
+      : '';
+    
+    // Free addon options (main_waffle hariç)
+    const freeAddonOpts = (p.options || []).filter(o => o.group_id !== (isCombo && p.options[0] && p.base.mainWaffle ? p.options[0].group_id : -1));
+    // Aslında main_waffle her zaman ilk option olarak ekleniyor (unshift). Onu hariç tut:
+    const otherOpts = isCombo && p.base.mainWaffle && p.options && p.options.length > 0 
+      ? p.options.slice(1) 
+      : (p.options || []);
+    const optsHtml = (otherOpts && otherOpts.length > 0) 
+      ? `<div class="free-choice">🎁 ${otherOpts.map(o => `<b>${o.group_name}:</b> ${o.selected_name}`).join(' · ')}</div>` 
+      : '';
+    
+    return `
+    <div class="cart-line ${isCombo ? 'is-combo' : ''}">
+      <div class="head">
+        <div style="min-width:0; flex:1;">
+          <b>${baseImg}${p.base.name}</b>
+          ${mainWaffleHtml}
+          ${ingsHtml ? `<div class="ings">${ingsHtml}</div>` : ''}
+          ${optsHtml}
+        </div>
+        <div style="text-align:right; flex-shrink:0;">
+          <div class="price">${p.plateTotal.toFixed(2)} TL</div>
+          <button class="remove" onclick="removePlate(${idx})">🗑️ Sil</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function removePlate(idx) { 
+  if (sessionExpired) return;
+  cart.splice(idx, 1); refreshCart(); updateTotal(); 
+}
+
+// ============================================================
+// 🎁 KAMPANYA MODAL (V2 - main_waffle desteği)
+// ============================================================
+let modalState = {
+  campaignId: null,
+  name: '',
+  basePrice: 0,
+  // Hangi waffle seçildi? (main_waffle grubundan)
+  selectedMainWaffle: null,  // {id, name, group_id}
+  // Malzemeler
+  selectedIngs: new Map(),
+  // free_addon seçimleri
+  selectedOptions: new Map(), // group_id -> {product_id, product_name, extra_price, group_name}
+  // Toplam
+  computedTotal: 0
+};
+
+function openCampaignModal(campId) {
+  if (sessionExpired) return;
+  const card = document.querySelector(`.campaign-card[data-id="${campId}"]`);
+  if (!card) return;
+  if (card.classList.contains('out-of-stock')) {
+    alert('❌ Bu kampanya STOKTA YOK');
+    return;
+  }
+  
+  // Reset
+  modalState = {
+    campaignId: campId,
+    name: card.dataset.name,
+    basePrice: parseFloat(card.dataset.price),
+    selectedMainWaffle: null,
+    selectedIngs: new Map(),
+    selectedOptions: new Map(),
+    computedTotal: parseFloat(card.dataset.price)
+  };
+  
+  document.getElementById('modalTitle').textContent = '🎁 ' + modalState.name;
+  renderModalBody();
+  document.getElementById('modalTotal').textContent = modalState.basePrice.toFixed(2) + ' TL';
+  validateModalConfirm();
+  document.getElementById('campaignModal').classList.add('show');
+}
+
+function renderModalBody() {
+  let html = '';
+  
+  const groups = PRODUCTS_WITH_OPTIONS[modalState.campaignId] || [];
+  const mainWaffleGroups = groups.filter(g => g.group_type === 'main_waffle');
+  const freeAddonGroups = groups.filter(g => g.group_type !== 'main_waffle');
+  
+  // 1️⃣ ANA WAFFLE SEÇİMİ (üstte)
+  if (mainWaffleGroups.length > 0) {
+    mainWaffleGroups.forEach(g => {
+      html += `<div class="opt-group" style="border-color:#28a745; background:#f0fff4;" data-group-id="${g.id}">
+        <div class="opt-group-title" style="color:#155724;">
+          🧇 ${g.name}
+          <span class="opt-required-badge" style="background:#28a745;">ANA SEÇİM</span>
+        </div>
+        <div class="opt-items">
+          ${g.items.map(it => `
+            <div class="opt-item modal-main-waffle" 
+                 data-group-id="${g.id}" 
+                 data-product-id="${it.id}" 
+                 data-product-name="${it.name}"
+                 onclick="selectMainWaffle(this)">
+              ${it.image_url ? `<img src="${it.image_url}" style="width:100%; height:60px; object-fit:cover; border-radius:8px; margin-bottom:4px;">` : '<div style="font-size:32px;">🧇</div>'}
+              <div class="opt-item-name">${it.name}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+    });
+  }
+  
+  // 2️⃣ MALZEMELER (Ana waffle seçildiyse veya zaten gösterilmesi gerekiyorsa)
+  // - main_waffle grubu varsa: seçilen waffle'ın malzemelerini göster (placeholder)
+  // - main_waffle grubu yoksa: tüm malzemeleri göster (geri uyum)
+  html += '<div id="modalIngSection">';
+  if (mainWaffleGroups.length > 0 && !modalState.selectedMainWaffle) {
+    html += `<div style="background:#fff3cd; padding:14px; border-radius:12px; margin:14px 0; text-align:center; color:#856404; font-weight:700;">
+      👆 Önce yukarıdan <b>waffle türünü</b> seç<br>
+      <small style="font-weight:400;">Malzemeler waffle seçince yüklenecek</small>
+    </div>`;
+  } else {
+    html += renderIngredientsSection();
+  }
+  html += '</div>';
+  
+  // 3️⃣ BEDAVA EK SEÇİMLERİ (Çay/Su)
+  if (freeAddonGroups.length > 0) {
+    freeAddonGroups.forEach(g => {
+      html += `<div class="opt-group" data-group-id="${g.id}">
+        <div class="opt-group-title">
+          ${g.icon} ${g.name}
+          ${g.is_required ? '<span class="opt-required-badge">ZORUNLU</span>' : ''}
+        </div>
+        <div class="opt-items">
+          ${g.items.map(it => `
+            <div class="opt-item modal-opt-item" 
+                 data-group-id="${g.id}" 
+                 data-product-id="${it.id}" 
+                 data-product-name="${it.name}" 
+                 data-extra-price="${it.extra_price}"
+                 data-group-name="${g.name}"
+                 onclick="selectModalOption(this)">
+              <div class="opt-item-name">${it.name}</div>
+              <div class="opt-item-price">${it.extra_price > 0 ? '+' + it.extra_price + '₺' : 'Bedava 🎁'}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+    });
+  }
+  
+  document.getElementById('modalBody').innerHTML = html;
+  
+  // Önceden seçilmiş öğelerin "selected" class'ını geri yükle
+  if (modalState.selectedMainWaffle) {
+    const el = document.querySelector(`.modal-main-waffle[data-product-id="${modalState.selectedMainWaffle.id}"]`);
+    if (el) el.classList.add('selected');
+  }
+  modalState.selectedOptions.forEach((o, gid) => {
+    const el = document.querySelector(`.modal-opt-item[data-group-id="${gid}"][data-product-id="${o.product_id}"]`);
+    if (el) el.classList.add('selected');
+  });
+  modalState.selectedIngs.forEach((ing, id) => {
+    const el = document.querySelector(`.modal-ing-item[data-id="${id}"]`);
+    if (el) el.classList.add('selected');
+  });
+}
+
+function renderIngredientsSection() {
+  // Hangi ürünün malzemelerini göstereceğiz?
+  // main_waffle varsa: seçilen waffle'ın ID'sini kullan (o waffle hangi kategorideyse oradan)
+  // yoksa: tüm ingredient kategorileri
+  
+  const ingCats = collectIngredientCategories();
+  if (ingCats.length === 0) return '';
+  
+  let waffleHeader = '';
+  if (modalState.selectedMainWaffle) {
+    waffleHeader = `<div style="background:#d4edda; padding:10px 14px; border-radius:10px; margin-bottom:10px; color:#155724; font-weight:700; font-size:13px;">
+      ✅ Seçilen Waffle: <b>${modalState.selectedMainWaffle.name}</b><br>
+      <small style="font-weight:500;">Aşağıdan malzemelerini seç 👇</small>
+    </div>`;
+  }
+  
+  let html = waffleHeader;
+  ingCats.forEach(cat => {
+    const ruleNote = cat.rule 
+      ? `<span style="font-size:10px; color:#666; font-weight:600;">(İlk ${cat.rule.free_count} bedava${cat.rule.extra > 0 || cat.rule.useOwn ? ' · sonrası ücretli' : ''})</span>`
+      : '';
+    html += `<div class="opt-group">
+      <div class="opt-group-title">${cat.icon} ${cat.name} ${ruleNote}</div>
+      <div class="opt-items" style="grid-template-columns:repeat(3,1fr);">
+        ${cat.products.map(p => {
+          // Fiyat etiketini hesapla (rule'a göre)
+          let priceLabel = '';
+          if (cat.rule) {
+            if (cat.rule.useOwn && p.ownPrice > 0) {
+              priceLabel = `🆓 / +${p.ownPrice.toFixed(0)}₺`;
+            } else if (cat.rule.extra > 0) {
+              priceLabel = `🆓 / +${cat.rule.extra.toFixed(0)}₺`;
+            } else {
+              priceLabel = '🆓';
+            }
+          } else if (p.ownPrice > 0) {
+            priceLabel = `+${p.ownPrice.toFixed(0)}₺`;
+          } else {
+            priceLabel = '🆓';
+          }
+          
+          return `
+            <div class="opt-item modal-ing-item" 
+                 data-id="${p.id}" 
+                 data-name="${p.name}" 
+                 data-cat="${cat.id}"
+                 data-own-price="${p.ownPrice}"
+                 data-has-rule="${cat.rule ? 1 : 0}"
+                 data-use-own="${cat.rule && cat.rule.useOwn ? 1 : 0}"
+                 data-free="${cat.rule ? cat.rule.free_count : 0}"
+                 data-extra="${cat.rule ? cat.rule.extra : 0}"
+                 onclick="toggleModalIng(this)">
+              <div style="font-size:22px;">${p.emoji}</div>
+              <div class="opt-item-name" style="font-size:11px;">${p.name}</div>
+              <div class="opt-item-price" style="font-size:10px; margin-top:2px;">${priceLabel}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>`;
+  });
+  return html;
+}
+
+function selectMainWaffle(el) {
+  const gid = parseInt(el.dataset.groupId);
+  const pid = parseInt(el.dataset.productId);
+  const name = el.dataset.productName;
+  
+  // Eğer aynı waffle tıklandıysa: ses sınıfı yine kalsın (no-op)
+  if (modalState.selectedMainWaffle && modalState.selectedMainWaffle.id === pid) return;
+  
+  // Önceki seçimleri kaldır
+  document.querySelectorAll(`.modal-main-waffle[data-group-id="${gid}"]`).forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  
+  // State güncelle
+  modalState.selectedMainWaffle = { id: pid, name: name, group_id: gid };
+  // Waffle değiştirildiğinde malzeme seçimleri sıfırlanmalı (kategoriler değişebilir)
+  modalState.selectedIngs.clear();
+  
+  // Malzeme bölümünü yenile
+  const ingSection = document.getElementById('modalIngSection');
+  if (ingSection) {
+    ingSection.innerHTML = renderIngredientsSection();
+  }
+  
+  recalculateModalTotal();
+  validateModalConfirm();
+}
+
+function collectIngredientCategories() {
+  // Sayfadaki ingredient_cats DOM'undan kategori bilgilerini topla
+  const cats = [];
+  document.querySelectorAll('.cat-panel').forEach(panel => {
+    const catId = parseInt(panel.dataset.cat);
+    const tab = document.querySelector(`.cat-tab[data-cat="${catId}"]`);
+    if (!tab) return;
+    const catName = tab.textContent.trim();
+    const icon = catName.split(' ')[0];
+    const nameOnly = catName.substring(icon.length).trim();
+    
+    const products = [];
+    let rule = null;
+    panel.querySelectorAll('.ing-item').forEach(ing => {
+      if (ing.classList.contains('out-of-stock')) return;
+      if (!rule && ing.dataset.hasRule === '1') {
+        rule = {
+          free_count: parseInt(ing.dataset.free) || 0,
+          extra: parseFloat(ing.dataset.extra) || 0,
+          useOwn: ing.dataset.useOwn === '1'
+        };
+      }
+      const emoji = ing.querySelector('.ing-emoji-fallback')?.textContent || '✨';
+      products.push({
+        id: parseInt(ing.dataset.id),
+        name: ing.dataset.name,
+        emoji: emoji,
+        ownPrice: parseFloat(ing.dataset.ownPrice) || 0
+      });
+    });
+    if (products.length > 0) {
+      cats.push({ id: catId, name: nameOnly, icon, rule, products });
+    }
+  });
+  return cats;
+}
+
+function toggleModalIng(el) {
+  const id = parseInt(el.dataset.id);
+  if (modalState.selectedIngs.has(id)) {
+    modalState.selectedIngs.delete(id);
+    el.classList.remove('selected');
+  } else {
+    modalState.selectedIngs.set(id, {
+      id, 
+      name: el.dataset.name, 
+      cat_id: parseInt(el.dataset.cat),
+      own_price: parseFloat(el.dataset.ownPrice) || 0,
+      has_rule: el.dataset.hasRule === '1',
+      use_own: el.dataset.useOwn === '1',
+      free: parseInt(el.dataset.free) || 0,
+      extra: parseFloat(el.dataset.extra) || 0,
+      emoji: el.querySelector('div').textContent
+    });
+    el.classList.add('selected');
+  }
+  recalculateModalTotal();
+  validateModalConfirm();
+}
+
+function selectModalOption(el) {
+  const gid = parseInt(el.dataset.groupId);
+  const pid = parseInt(el.dataset.productId);
+  // Aynı grupta diğerlerini kaldır
+  document.querySelectorAll(`.modal-opt-item[data-group-id="${gid}"]`).forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  modalState.selectedOptions.set(gid, {
+    group_id: gid,
+    product_id: pid,
+    product_name: el.dataset.productName,
+    extra_price: parseFloat(el.dataset.extraPrice) || 0,
+    group_name: el.dataset.groupName || ''
+  });
+  recalculateModalTotal();
+  validateModalConfirm();
+}
+
+function recalculateModalTotal() {
+  let total = modalState.basePrice;
+  // Ekstra malzeme ücretleri (kuralı aşanlar)
+  const byCat = {};
+  Array.from(modalState.selectedIngs.values()).forEach(ing => {
+    if (!byCat[ing.cat_id]) byCat[ing.cat_id] = [];
+    byCat[ing.cat_id].push(ing);
+  });
+  Object.values(byCat).forEach(items => {
+    items.forEach((ing, i) => {
+      total += calcIngPrice(ing, i);
+    });
+  });
+  // Zorunlu seçim ekstra ücretleri
+  modalState.selectedOptions.forEach(o => {
+    total += o.extra_price;
+  });
+  document.getElementById('modalTotal').textContent = total.toFixed(2) + ' TL';
+  modalState.computedTotal = total;
+}
+
+function validateModalConfirm() {
+  // Tüm zorunlu gruplar seçilmiş mi?
+  const groups = PRODUCTS_WITH_OPTIONS[modalState.campaignId] || [];
+  let allRequiredSelected = true;
+  groups.forEach(g => {
+    if (g.group_type === 'main_waffle') {
+      // Main waffle seçilmiş mi?
+      if (!modalState.selectedMainWaffle || modalState.selectedMainWaffle.group_id !== g.id) {
+        allRequiredSelected = false;
+      }
+    } else if (g.is_required && !modalState.selectedOptions.has(g.id)) {
+      allRequiredSelected = false;
+    }
+  });
+  document.getElementById('modalConfirmBtn').disabled = !allRequiredSelected;
+}
+
+function closeCampaignModal() {
+  document.getElementById('campaignModal').classList.remove('show');
+}
+
+function confirmCampaign() {
+  if (sessionExpired) return;
+  // Sepete kampanya kalemi ekle
+  const ingsList = [];
+  const byCat = {};
+  Array.from(modalState.selectedIngs.values()).forEach(ing => {
+    if (!byCat[ing.cat_id]) byCat[ing.cat_id] = [];
+    byCat[ing.cat_id].push(ing);
+  });
+  Object.values(byCat).forEach(items => {
+    items.forEach((ing, i) => {
+      const price = calcIngPrice(ing, i);
+      ingsList.push({
+        ing_id: ing.id, name: ing.name, emoji: ing.emoji,
+        isFree: price === 0, price
+      });
+    });
+  });
+  
+  // 🎁 Options: free_addon seçimleri + main_waffle (varsa)
+  const optsList = Array.from(modalState.selectedOptions.values()).map(o => ({
+    group_id: o.group_id,
+    product_id: o.product_id,
+    selected_name: o.product_name,
+    group_name: o.group_name
+  }));
+  
+  // 🧇 Main waffle seçimini de options'a ekle (mutfak ve telegram için)
+  if (modalState.selectedMainWaffle) {
+    // Main waffle grubunun ismini bul
+    const groups = PRODUCTS_WITH_OPTIONS[modalState.campaignId] || [];
+    const waffleGroup = groups.find(g => g.id === modalState.selectedMainWaffle.group_id);
+    optsList.unshift({
+      group_id: modalState.selectedMainWaffle.group_id,
+      product_id: modalState.selectedMainWaffle.id,
+      selected_name: modalState.selectedMainWaffle.name,
+      group_name: waffleGroup ? waffleGroup.name : 'Waffle Türü'
+    });
+  }
+  
+  cart.push({
+    type: 'campaign',
+    base: { 
+      id: modalState.campaignId,
+      name: modalState.name,
+      price: modalState.basePrice,
+      img: '',
+      mainWaffle: modalState.selectedMainWaffle ? modalState.selectedMainWaffle.name : null
+    },
+    ingredients: ingsList,
+    options: optsList,
+    plateTotal: modalState.computedTotal || modalState.basePrice
+  });
+  
+  closeCampaignModal();
+  refreshCart();
+  updateTotal();
+  
+  if (window.confetti) confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 }, colors: ['#ff6b9d','#fff','#ff4d8c','#ffd6e3']});
+  document.getElementById('cartSection').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ============================================================
+// SİPARİŞ GÖNDER
+// ============================================================
+document.getElementById('sendBtn').addEventListener('click', async () => {
+  if (sessionExpired) { showExpiredScreen(); return; }
+  
+  // Açık tabağı önce sepete ekle
+  if (selectedBase && selectedIngs.size > 0) {
+    document.getElementById('addPlateBtn')?.click();
+    await new Promise(r => setTimeout(r, 400));
+  }
+  
+  if (selectedBase && selectedIngs.size === 0) {
+    alert('⚠️ Seçtiğin WAFFLE TABANI için en az 1 MALZEME seçmelisin');
+    return;
+  }
+  if (!selectedBase && selectedIngs.size > 0) {
+    alert('⚠️ Önce WAFFLE TABANI seç');
+    return;
+  }
+  
+  const standalone = getSelectedStandalone();
+  
+  if (cart.length === 0 && standalone.length === 0) { 
+    alert('⚠️ Sepetin boş!'); 
+    return; 
+  }
+  
+  const name = document.getElementById('customerName').value.trim();
+  if (!name) {
+    alert('Lütfen isim soyisim gir');
+    document.getElementById('customerName').focus();
+    return;
+  }
+  
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true; btn.textContent = '⏳ Gönderiliyor...';
+  
+  // Payload: her cart kalemi bir plate (kampanya dahil)
+  const platesPayload = cart.map(p => ({
+    base_id: p.base.id,
+    ingredients: p.ingredients.map(i => i.ing_id),
+    options: (p.options || []).map(o => ({
+      group_id: o.group_id,
+      product_id: o.product_id
+    }))
+  }));
+  
+  const standaloneIds = standalone.map(s => s.id);
+  
+  try {
+    const res = await fetch('/api/order', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        table_id: TABLE_ID, customer_name: name, customer_phone: '',
+        note: document.getElementById('orderNote').value,
+        plates: platesPayload,
+        standalone_items: standaloneIds
+      })
+    });
+    const data = await res.json();
+    
+    if (!data.ok && data.error === 'session_expired') {
+      showExpiredScreen(data.message); return;
+    }
+    
+    if (data.ok) {
+      if (window.confetti) {
+        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 }, colors: ['#ff6b9d','#ffb3d1','#fff','#ff4d8c']});
+        setTimeout(() => {
+          confetti({ particleCount: 150, angle: 60, spread: 80, origin: { x: 0 }, colors: ['#ff6b9d','#fff']});
+          confetti({ particleCount: 150, angle: 120, spread: 80, origin: { x: 1 }, colors: ['#ff6b9d','#fff']});
+        }, 250);
+      }
+      sessionExpired = true;
+      document.querySelector('.container').innerHTML = `
+        <div class="success-screen">
+          <div class="success-icon">🎉</div>
+          <h1 style="color:#d63384; margin:16px 0; font-size:28px;">Siparişin Mutfağa Gitti!</h1>
+          <p style="color:#6b4a5d; font-size:14px;">${name} · Sipariş #${data.order_id}</p>
+          <div class="success-card">
+            <div style="color:#a86b8a; font-size:13px;">Toplam Tutar</div>
+            <div style="font-size:42px; color:#d63384; font-weight:900;">${data.total.toFixed(2)} TL</div>
+          </div>
+          <p style="color:#a86b8a; font-size:15px; margin-top:20px;">🍳 Hazırlanıyor...</p>
+          <p style="color:#d63384; font-weight:700; margin-top:4px;">Afiyet olsun! 💕</p>
+        </div>`;
+      document.querySelector('.bottom-bar').style.display = 'none';
+      document.getElementById('campaignModal').style.display = 'none';
+    } else {
+      alert('Hata: ' + (data.error || data.message || 'bilinmeyen'));
+      btn.disabled = false; btn.textContent = '🚀 Sipariş Ver';
+    }
+  } catch (e) {
+    alert('Bağlantı hatası: ' + e.message);
+    btn.disabled = false; btn.textContent = '🚀 Sipariş Ver';
+  }
+});
+</script>
+{% endblock %}

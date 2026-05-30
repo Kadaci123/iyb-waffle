@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}iyb waffle{% endblock %}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+       background: linear-gradient(135deg, #ffe0ec 0%, #fff5f8 50%, #ffffff 100%);
+       min-height: 100vh; color: #2d1b2e; }
+.container { max-width: 480px; margin: 0 auto; padding: 16px; }
+.btn { background: linear-gradient(135deg, #ff6b9d 0%, #ff8db5 100%); color: white; border: none;
+       padding: 14px 24px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer;
+       box-shadow: 0 6px 20px rgba(255,107,157,0.35); transition: transform .15s; width: 100%; }
+.btn:active { transform: scale(0.96); }
+.btn-ghost { background: white; color: #ff6b9d; border: 2px solid #ffcad6; box-shadow: none; }
+.card { background: white; border-radius: 20px; padding: 16px; box-shadow: 0 4px 20px rgba(255,107,157,0.1); margin-bottom: 12px; }
+h1, h2, h3 { color: #ff4d8c; }
+.brand { font-weight: 900; font-size: 28px; letter-spacing: -1px; background: linear-gradient(135deg,#ff4d8c,#ff8db5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+input, select { width: 100%; padding: 12px; border: 2px solid #ffd6e3; border-radius: 12px; font-size: 15px; background: white; outline: none; }
+input:focus, select:focus { border-color: #ff6b9d; }
+label { display: block; margin: 10px 0 6px; font-weight: 600; font-size: 14px; color: #6b3e54; }
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+{% block content %}{% endblock %}
+</body>
+</html>

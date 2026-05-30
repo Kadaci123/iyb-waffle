@@ -1,0 +1,1207 @@
+{% extends "base.html" %}
+{% block title %}Yönetici — iyb waffle{% endblock %}
+{% block head %}
+<style>
+.stats { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin-bottom: 14px; }
+.stat-card { background: linear-gradient(135deg,#ff6b9d,#ff8db5); color:white; padding:14px 10px; border-radius:14px; text-align:center; }
+.stat-card.alt { background: linear-gradient(135deg,#ffa500,#ffb84d); }
+.stat-card.alt2 { background: linear-gradient(135deg,#28a745,#5cb85c); }
+.stat-card .val { font-size: 24px; font-weight: 800; }
+.stat-card .lbl { font-size: 11px; opacity: 0.9; }
+.tabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 2px solid #ffe0ec; overflow-x: auto; }
+.tab { padding: 10px 14px; background: none; border: none; cursor: pointer; font-weight: 600; color: #888; border-bottom: 3px solid transparent; white-space: nowrap; font-size: 13px; }
+.tab.active { color: #ff6b9d; border-bottom-color: #ff6b9d; }
+.tab-content { display: none; }
+.tab-content.show { display: block; }
+.row { background: #fff5f8; padding: 10px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.row-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn-small { padding: 6px 10px; border-radius: 8px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-block; }
+.btn-edit { background: #ffe0ec; color: #ff4d8c; }
+.btn-del { background: #ffb3c5; color: #d63384; }
+.btn-save { background: #28a745; color: white; }
+.btn-cancel { background: #888; color: white; }
+.btn-photo { background: #6f42c1; color: white; }
+.btn-combo { background: linear-gradient(135deg, #ff4d8c, #ff8db5); color: white; }
+.rule-form { background: #f8f8f8; padding: 12px; border-radius: 10px; margin-top: 4px; margin-bottom: 8px; }
+.rule-form input { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; margin: 0 4px; }
+.edit-form { background: #fff; padding: 12px; border-radius: 10px; margin-top: 4px; margin-bottom: 8px; border: 2px solid #ff6b9d; }
+.edit-form input, .edit-form select { width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+.warning-zero { background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.cat-badge-bev { background:#e3f2fd; color:#1976d2; padding:6px 10px; border-radius:8px; font-size:12px; font-weight:600; cursor:default; }
+.cat-badge-dessert { background:#fce4ec; color:#d63384; padding:6px 10px; border-radius:8px; font-size:12px; font-weight:600; cursor:default; }
+
+.prod-thumb { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; flex-shrink: 0; border: 2px solid #ffd6e3; background: #fff5f8; }
+.prod-no-thumb { width: 50px; height: 50px; border-radius: 10px; background: #ffe0ec; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; border: 2px dashed #ffb3c5; }
+
+.photo-section { background: #f0f8ff; padding: 12px; border-radius: 10px; margin-top: 8px; border: 2px dashed #6f42c1; }
+.photo-section h4 { color: #6f42c1; margin: 0 0 8px 0; font-size: 13px; }
+.photo-current { max-width: 120px; max-height: 120px; border-radius: 10px; margin-bottom: 8px; display: block; border: 2px solid #6f42c1; }
+
+/* 🎁 KAMPANYA / ZORUNLU SEÇİM PANELİ */
+.combo-section {
+  background: linear-gradient(135deg, #fff4f9, #ffe0ec);
+  border: 2px dashed #ff4d8c;
+  padding: 12px;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+.combo-section h4 {
+  color: #d63384;
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.combo-group-card {
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  border-left: 4px solid #ff4d8c;
+}
+.combo-group-card .head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.combo-group-card .head b {
+  color: #d63384;
+  font-size: 13px;
+}
+.combo-item-pill {
+  display: inline-block;
+  background: #fff5f8;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  margin: 2px;
+  color: #2d1b2e;
+}
+.combo-empty {
+  text-align: center;
+  color: #888;
+  font-size: 12px;
+  padding: 10px;
+}
+
+/* 🎁 BASİT CHECKBOX HAVUZ (V4) */
+.combo-pool {
+  background: white;
+  padding: 12px;
+  border-radius: 10px;
+  border: 2px solid #ffd6e3;
+}
+.combo-pool-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.combo-pool-h h5 {
+  margin: 0;
+  color: #d63384;
+  font-size: 13px;
+  font-weight: 800;
+}
+.combo-pool-info {
+  font-size: 10px;
+  color: #888;
+  font-weight: 500;
+}
+.combo-checkbox-list {
+  max-height: 220px;
+  overflow-y: auto;
+  background: #fff8fc;
+  border-radius: 8px;
+  padding: 6px;
+  border: 1px solid #ffe0ec;
+}
+.combo-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s;
+  user-select: none;
+}
+.combo-checkbox:hover {
+  background: #fff0f6;
+}
+.combo-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #ff4d8c;
+  cursor: pointer;
+  margin: 0;
+  flex-shrink: 0;
+}
+.combo-checkbox span {
+  font-size: 13px;
+  color: #2d1b2e;
+  font-weight: 600;
+  flex: 1;
+}
+.combo-checkbox:has(input:checked) {
+  background: #ffe8f0;
+}
+.combo-checkbox:has(input:checked) span {
+  color: #d63384;
+}
+
+.combo-form {
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+  margin-top: 8px;
+  border: 2px solid #ff4d8c;
+}
+.combo-form input, .combo-form select {
+  padding: 7px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-bottom: 6px;
+  width: 100%;
+}
+.combo-prod-list {
+  background: #fff5f8;
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  min-height: 40px;
+}
+.combo-prod-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: white;
+  padding: 4px 8px;
+  border-radius: 999px;
+  margin: 2px;
+  font-size: 11px;
+  border: 1px solid #ffd6e3;
+}
+.combo-prod-item button {
+  background: #ffb3c5;
+  color: #d63384;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 8px; }
+.qr-card { background: white; border: 2px solid #ffe0ec; border-radius: 16px; padding: 14px; text-align: center; transition: transform .2s; }
+.qr-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,107,157,0.2); }
+.qr-card img { width: 100%; max-width: 130px; height: auto; border-radius: 10px; background: white; padding: 6px; }
+.qr-card .name { font-weight: 800; color: #ff4d8c; font-size: 16px; margin-top: 8px; }
+.qr-card .loc { font-size: 11px; color: #888; margin-top: 2px; }
+.qr-card .actions { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
+.qr-card .actions a, .qr-card .actions button { flex: 1; padding: 7px; border-radius: 8px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.qr-card .dl-btn { background: #ff6b9d; color: white; }
+.qr-card .print-btn { background: #28a745; color: white; }
+.qr-card .del-btn { background: #ffb3c5; color: #d63384; }
+
+.pin-section { background: linear-gradient(135deg, #fff5f8, #ffeaf2); padding: 14px; border-radius: 12px; margin-bottom: 12px; border-left: 4px solid #ff6b9d; }
+.pin-section.kasa-pin { border-left-color: #28a745; background: linear-gradient(135deg, #f0fff4, #e6ffec); }
+.pin-section.mutfak-pin { border-left-color: #ffa500; background: linear-gradient(135deg, #fff8e6, #fff3cd); }
+.pin-section h4 { margin: 0 0 8px 0; font-size: 14px; color: #2d1b2e; }
+
+.rule-checkbox-wrap { display:flex; align-items:flex-start; gap:8px; padding:10px; background:#fff; border-radius:8px; margin-bottom:10px; cursor:pointer; border: 2px solid #ffe0ec; }
+.rule-checkbox-wrap:hover { border-color: #ff6b9d; }
+.rule-checkbox-wrap input[type="checkbox"] { width:20px; height:20px; margin:0; flex-shrink:0; cursor:pointer; accent-color: #ff4d8c; }
+.rule-checkbox-wrap .label-text { font-size:12px; line-height:1.4; }
+.rule-checkbox-wrap .label-text b { color: #d63384; }
+
+.product-out-of-stock .row {
+  background: linear-gradient(135deg, #ffe0e0, #ffd6d6) !important;
+  position: relative;
+  border: 2px solid #dc3545;
+}
+.product-out-of-stock .row::after {
+  content: '🚫 BİTTİ';
+  position: absolute;
+  top: -8px;
+  right: 10px;
+  background: #dc3545;
+  color: white;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+}
+.product-out-of-stock .prod-thumb,
+.product-out-of-stock .prod-no-thumb {
+  opacity: 0.4;
+  filter: grayscale(100%);
+}
+.product-out-of-stock .row > div:nth-child(2) b {
+  text-decoration: line-through;
+  color: #888;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container">
+
+  <!-- 🚀 HIZLI ERİŞİM -->
+  <div class="card" style="margin-bottom:16px; background:linear-gradient(135deg,#fff5f8,#ffe8f0); border:2px solid #ffd6e3;">
+    <h3 style="color:#d63384; margin-bottom:12px; font-size:15px; display:flex; align-items:center; gap:8px;">
+      🚀 Hızlı Erişim
+      <span style="font-size:11px; font-weight:600; color:#888;">— Diğer panellere geç</span>
+    </h3>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <a href="/{{ admin_prefix }}-mutfak" style="text-decoration:none;" target="_blank">
+        <button class="btn" style="width:100%; background:linear-gradient(135deg,#ffa500,#ffb84d); padding:14px; font-size:14px; box-shadow:0 4px 14px rgba(255,165,0,0.35);">
+          👨‍🍳 Mutfak Paneli
+        </button>
+      </a>
+      <a href="/{{ admin_prefix }}-kasa" style="text-decoration:none;" target="_blank">
+        <button class="btn" style="width:100%; background:linear-gradient(135deg,#28a745,#20c997); padding:14px; font-size:14px; box-shadow:0 4px 14px rgba(40,167,69,0.35);">
+          💰 Kasa Paneli
+        </button>
+      </a>
+    </div>
+    <p style="font-size:11px; color:#888; margin-top:10px; text-align:center;">
+      🔒 Her geçişte güvenlik için PIN tekrar sorulur · Yönetici PIN'i her panele geçerli
+    </p>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; padding: 14px 0;">
+    <div>
+      <div class="brand" style="font-size:24px;">iyb waffle 🧇</div>
+      <small style="color:#a86b8a;">Yönetim Paneli</small>
+    </div>
+    <a href="/{{ admin_prefix }}-cikis?target=yonetici" style="background:#ffb3c5; color:white; padding:8px 12px; border-radius:10px; text-decoration:none; font-size:12px;">🚪 Çıkış</a>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="val">{{ daily_count }}</div>
+      <div class="lbl">Bugünkü Sipariş</div>
+    </div>
+    <div class="stat-card alt2">
+      <div class="val">{{ "%.0f"|format(daily_revenue) }}₺</div>
+      <div class="lbl">Günlük Ciro</div>
+    </div>
+    <div class="stat-card alt">
+      <div class="val">{{ pending_count }}</div>
+      <div class="lbl">Bekleyen</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="dashboard" onclick="showTab(event, 'dashboard')">📊 Dashboard</button>
+    <button class="tab" data-tab="kategoriler" onclick="showTab(event, 'kategoriler')">📂 Kategoriler</button>
+    <button class="tab" data-tab="urunler" onclick="showTab(event, 'urunler')">🧇 Ürünler</button>
+    <button class="tab" data-tab="masalar" onclick="showTab(event, 'masalar')">🪑 Masa & QR</button>
+    <button class="tab" data-tab="ayarlar" onclick="showTab(event, 'ayarlar')">⚙️ Ayarlar</button>
+  </div>
+
+  <!-- TAB: DASHBOARD -->
+  <div id="dashboard" class="tab-content show">
+    <div class="card">
+      <h3>🏆 En Çok Satılan Ürünler</h3>
+      <p style="color:#888; font-size:12px; margin-bottom:14px;">Bugün siparişlerde en çok tercih edilen ürünler</p>
+      <div style="background:#fff5f8; border-radius:12px; padding:14px; min-height:200px;" id="topProducts">
+        <p style="color:#888; text-align:center; font-size:13px;">Yükleniyor...</p>
+      </div>
+    </div>
+    
+    <div class="card" style="background: linear-gradient(135deg, #fff5f8, #ffe0ec); border: 2px solid #ff4d8c;">
+      <h3 style="color: #d63384;">🎁 Kampanya Nasıl Oluşturulur?</h3>
+      <ol style="color:#6b4a5d; font-size:13px; line-height:1.8;">
+        <li>📂 <b>Kategoriler</b> sekmesine git → <b>"🔥 Kampanyalar"</b> diye yeni bir <b>Ana Ürün</b> kategorisi aç</li>
+        <li>🧇 <b>Ürünler</b> sekmesine git → "Waffle + Çay Menüsü" gibi bir ürün ekle, kampanyalı fiyatı yaz (örn 250₺), Kategori: <b>Kampanyalar</b></li>
+        <li>✏️ Bu ürünü düzenle → en altta <b>🎁 Zorunlu Seçim Kuralı</b> kısmından "İçeceğinizi Seçin" gibi bir grup ekle, müşterinin ücretsiz seçebileceği içecekleri belirle</li>
+        <li>✅ Tamam! Müşteri kampanyayı seçince normal waffle gibi malzeme ekleyebilecek, en altta da içeceğini seçecek</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- TAB: KATEGORİLER -->
+  <div id="kategoriler" class="tab-content">
+    <div class="card">
+      <h3>📂 Yeni Kategori</h3>
+      <label>Ad</label>
+      <input id="catName" placeholder="Örn: Soslar veya 🔥 Kampanyalar">
+      <label>Tür</label>
+      <select id="catType">
+        <option value="base">🧇 Ana Ürün (Waffle, Pancake)</option>
+        <option value="campaign">🎁 Kampanya (Combo Menü, Fırsat)</option>
+        <option value="ingredient">🍫 Malzeme (Çikolata, Meyve)</option>
+        <option value="beverage">🥤 İçecek (Çay, Kahve, Su)</option>
+        <option value="dessert">🍦 Dondurma (Vanilya, Çikolata vb.)</option>
+      </select>
+      <label>İkon (emoji)</label>
+      <input id="catIcon" placeholder="🍯 veya 🔥">
+      <small style="color:#d63384; display:block; margin-top:6px;">💡 Kampanya kategorisinde 'Waffle+Çay Menüsü' gibi combo ürünleri ekleyebilirsin.</small>
+      <div style="height:10px;"></div>
+      <button class="btn" onclick="saveCategory()">+ Kategori Ekle</button>
+    </div>
+
+    <div class="card">
+      <h3>📋 Mevcut Kategoriler</h3>
+      {% for c in categories %}
+      <div class="row">
+        <div style="flex:1;">
+          <b>{{ c.icon }} {{ c.name }}</b>
+          <small style="color:#888; display:block;">
+            {% if c.category_type == 'base' %}🧇 Ana Ürün
+            {% elif c.category_type == 'campaign' %}🎁 Kampanya
+            {% elif c.category_type == 'ingredient' %}🍫 Malzeme
+            {% elif c.category_type == 'beverage' %}🥤 İçecek
+            {% elif c.category_type == 'dessert' %}🍦 Dondurma
+            {% else %}{{ c.category_type }}{% endif %}
+          </small>
+        </div>
+        <div class="row-btns">
+          {% if c.category_type == 'ingredient' %}
+          <button class="btn-small btn-edit" onclick="toggleRule({{ c.id }})">⚙️ Kural</button>
+          {% endif %}
+          {% if c.category_type == 'beverage' %}
+          <span class="cat-badge-bev">🥤 Kuralsız</span>
+          {% endif %}
+          {% if c.category_type == 'dessert' %}
+          <span class="cat-badge-dessert">🍦 Kuralsız</span>
+          {% endif %}
+          <button class="btn-small btn-del" onclick="delCategory({{ c.id }})">🗑️ Sil</button>
+        </div>
+      </div>
+      {% if c.category_type == 'ingredient' %}
+      <div id="rule_form_{{ c.id }}" class="rule-form" style="display:none;">
+        <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
+          ⚡ <b>Kural ayarları:</b> Bu kategoriye giren malzemelerin fiyatlandırması<br>
+          Kural yoksa her malzeme kendi fiyatından satılır.
+        </div>
+        <label class="rule-checkbox-wrap" for="use_own_{{ c.id }}">
+          <input type="checkbox" id="use_own_{{ c.id }}" 
+                 {% if c.rule and c.rule.use_own_price %}checked{% endif %}>
+          <div class="label-text">
+            <b>📌 Ürünün kendi fiyatından sat</b><br>
+            <span style="color:#666;">
+              İlk N tanesi yine bedava, sonrası ürünün kendi fiyatı.
+            </span>
+          </div>
+        </label>
+        
+        <div style="margin-bottom: 8px; font-size: 13px;">
+          İlk 
+          <input type="number" id="free_{{ c.id }}" value="{% if c.rule %}{{ c.rule.free_count }}{% else %}0{% endif %}" style="width: 60px;" min="0">
+          tanesi bedava, sonrası 
+          <input type="number" step="0.01" id="extra_{{ c.id }}" value="{% if c.rule %}{{ c.rule.extra_price }}{% else %}0{% endif %}" style="width: 80px;" min="0">
+          TL
+        </div>
+        
+        <div style="display: flex; gap: 6px;">
+          <button class="btn-small btn-save" onclick="saveRule({{ c.id }})">💾 Kaydet</button>
+          {% if c.rule %}
+          <button class="btn-small btn-del" onclick="deleteRule({{ c.id }})">🗑️ Kuralı Sil</button>
+          {% endif %}
+          <button class="btn-small btn-cancel" onclick="toggleRule({{ c.id }})">✕ Kapat</button>
+        </div>
+      </div>
+      {% endif %}
+      {% else %}
+      <p style="color:#888; text-align:center;">Henüz kategori yok</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- TAB: ÜRÜNLER -->
+  <div id="urunler" class="tab-content">
+    <div class="card">
+      <h3>🧇 Yeni Ürün</h3>
+      <label>Ad</label>
+      <input id="prodName" placeholder="Örn: Çay">
+      <label>Açıklama (opsiyonel)</label>
+      <input id="prodDesc" placeholder="Kısa açıklama">
+      <label>Tür</label>
+      <select id="prodType">
+        <option value="base">🧇 Ana Ürün (Waffle)</option>
+        <option value="campaign">🎁 Kampanya / Combo Menü</option>
+        <option value="ingredient">🍫 Malzeme</option>
+        <option value="beverage">🥤 İçecek</option>
+        <option value="dessert">🍦 Dondurma</option>
+      </select>
+      <label>Kategori</label>
+      <select id="prodCat">
+        {% for c in categories %}
+        <option value="{{ c.id }}">{{ c.icon }} {{ c.name }} ({% if c.category_type == 'base' %}Ana{% elif c.category_type == 'campaign' %}🎁 Kampanya{% elif c.category_type == 'ingredient' %}Malz{% elif c.category_type == 'beverage' %}İçecek{% elif c.category_type == 'dessert' %}Dondurma{% endif %})</option>
+        {% endfor %}
+      </select>
+      <label>Fiyat (TL)</label>
+      <input id="prodPrice" type="number" step="0.01" value="0" placeholder="Örn: 80">
+      <small style="color:#888; display:block; margin-top:4px;">💡 İçecek/Dondurma için fiyatını mutlaka yaz</small>
+      <small style="color:#d63384; display:block; margin-top:4px;">🎁 <b>Kampanya ürünü</b> oluşturduktan sonra ✏️ Düzenle'den:
+      <br>(1) "📋 Kural Şablonu Kopyala" — örn. Klasik Waffle'ı seç
+      <br>(2) "🎁 Zorunlu Seçim Grubu" — örn. Çay/Su bedava seçim havuzu</small>
+      <div style="height:10px;"></div>
+      <button class="btn" onclick="saveProduct()">+ Ürün Ekle</button>
+    </div>
+
+    <div class="card">
+      <h3>🍽️ Mevcut Ürünler</h3>
+      {% for p in products %}
+      <div id="prod_row_{{ p.id }}" {% if p.is_out_of_stock %}class="product-out-of-stock"{% endif %}>
+        <div class="row">
+          {% if p.image_url %}
+          <img class="prod-thumb" src="{{ p.image_url }}" alt="{{ p.name }}">
+          {% else %}
+          <div class="prod-no-thumb">📷</div>
+          {% endif %}
+          <div style="flex:1;">
+            <b>{{ p.name }}</b>
+            {% if p.option_groups %}<span style="background:linear-gradient(135deg,#ff4d8c,#ff8db5); color:white; padding:2px 8px; border-radius:999px; font-size:10px; font-weight:800; margin-left:4px;">🎁 COMBO</span>{% endif %}
+            <small style="color:#888; display:block;">
+              {% if p.product_type == 'base' %}🧇 Ana Ürün
+              {% elif p.product_type == 'campaign' %}🎁 KAMPANYA
+              {% elif p.product_type == 'ingredient' %}🍫 Malzeme
+              {% elif p.product_type == 'beverage' %}🥤 İçecek
+              {% elif p.product_type == 'dessert' %}🍦 Dondurma
+              {% else %}{{ p.product_type }}{% endif %}
+              • 
+              {% if p.base_price|float == 0 %}
+                <span class="warning-zero">⚠️ 0 TL</span>
+              {% else %}
+                {{ p.base_price }} TL
+              {% endif %}
+            </small>
+            {% if p.description %}<small style="color:#a86b8a; display:block;">{{ p.description }}</small>{% endif %}
+          </div>
+          <div class="row-btns">
+            <button class="btn-small btn-edit" onclick="toggleEdit({{ p.id }})">✏️ Düzenle</button>
+            {% if p.is_out_of_stock %}
+            <button class="btn-small" style="background:#28a745; color:white;" onclick="toggleStock({{ p.id }})">✅ Stokta var</button>
+            {% else %}
+            <button class="btn-small" style="background:#dc3545; color:white;" onclick="toggleStock({{ p.id }})">⚠️ Bitti</button>
+            {% endif %}
+            <button class="btn-small btn-del" onclick="delProduct({{ p.id }})">🗑️</button>
+          </div>
+        </div>
+        <div id="edit_form_{{ p.id }}" class="edit-form" style="display:none;">
+          <label style="font-size: 12px;">Ad</label>
+          <input type="text" id="edit_name_{{ p.id }}" value="{{ p.name }}">
+          <label style="font-size: 12px;">Fiyat (TL)</label>
+          <input type="number" step="0.01" id="edit_price_{{ p.id }}" value="{{ p.base_price }}">
+          <label style="font-size: 12px;">Açıklama</label>
+          <input type="text" id="edit_desc_{{ p.id }}" value="{{ p.description or '' }}">
+          
+          <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+            <button class="btn-small btn-save" onclick="saveProductEdit({{ p.id }})">💾 Kaydet</button>
+            <button class="btn-small btn-cancel" onclick="toggleEdit({{ p.id }})">✕ İptal</button>
+          </div>
+          
+          <div class="photo-section">
+            <h4>📸 Ürün Fotoğrafı</h4>
+            {% if p.image_url %}
+            <img class="photo-current" src="{{ p.image_url }}" alt="Mevcut fotoğraf">
+            <button class="btn-small btn-del" onclick="deletePhoto({{ p.id }})" style="margin-bottom:8px;">🗑️ Fotoğrafı Sil</button>
+            {% else %}
+            <p style="color:#888; font-size:12px; margin:0 0 8px 0;">Henüz fotoğraf yüklenmedi</p>
+            {% endif %}
+            <input type="file" id="photo_{{ p.id }}" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" 
+                   style="margin-bottom:6px; padding:6px; border:1px solid #ddd; border-radius:6px; width:100%;">
+            <button class="btn-small btn-photo" onclick="uploadPhoto({{ p.id }})" style="width:100%;">📤 Fotoğraf Yükle</button>
+            <small style="color:#888; display:block; margin-top:4px;">PNG, JPG, JPEG, GIF veya WEBP (max 8 MB)</small>
+          </div>
+          
+          <!-- 🎁 KAMPANYA YÖNETİMİ (sadece campaign türü ürünler için) -->
+          {% if p.product_type == 'campaign' %}
+          <div class="combo-section">
+            <h4>🎁 Kampanya Ayarları</h4>
+            
+            {# Bu ürünün mevcut grup ürünlerini bul #}
+            {% set main_waffle_group = (p.option_groups | selectattr('group_type', 'equalto', 'main_waffle') | list | first) %}
+            {% set free_addon_group = (p.option_groups | selectattr('group_type', 'equalto', 'free_addon') | list | first) %}
+            {% set main_waffle_ids = (main_waffle_group.items | map(attribute='product_id') | list) if main_waffle_group else [] %}
+            {% set free_addon_ids = (free_addon_group.items | map(attribute='product_id') | list) if free_addon_group else [] %}
+            
+            <!-- 🧇 ANA WAFFLE SEÇİMİ -->
+            <div class="combo-pool">
+              <div class="combo-pool-h">
+                <h5>🧇 Hangi waffle'lar seçilebilsin?</h5>
+                <span class="combo-pool-info">Müşteri bunlardan birini seçecek</span>
+              </div>
+              
+              <input type="text" id="waffle_grp_name_{{ p.id }}" 
+                     placeholder="Grup başlığı" 
+                     value="{{ main_waffle_group.name if main_waffle_group else 'Waffle Türünü Seçin' }}"
+                     style="font-size:12px; margin-bottom:8px;">
+              
+              <div class="combo-checkbox-list">
+                {% set base_count = namespace(n=0) %}
+                {% for bp in selectable_products %}
+                  {% if bp.product_type == 'base' %}
+                    {% set base_count.n = base_count.n + 1 %}
+                    <label class="combo-checkbox">
+                      <input type="checkbox" class="waffle-cb-{{ p.id }}" value="{{ bp.id }}"
+                             {% if bp.id in main_waffle_ids %}checked{% endif %}>
+                      <span>🧇 {{ bp.name }} <small style="color:#888;">({{ bp.base_price }}₺)</small></span>
+                    </label>
+                  {% endif %}
+                {% endfor %}
+                {% if base_count.n == 0 %}
+                  <p style="color:#888; text-align:center; font-size:11px; padding:10px;">
+                    ⚠️ Henüz waffle ürünü yok. Önce Ürünler tab'ından <b>Ana Ürün (Waffle)</b> ekle.
+                  </p>
+                {% endif %}
+              </div>
+              
+              <button class="btn-small btn-save" onclick="saveMainWaffles({{ p.id }})" style="width:100%; padding:10px; margin-top:8px;">
+                💾 Waffle Seçeneklerini Kaydet
+              </button>
+              {% if main_waffle_ids %}
+              <small style="display:block; color:#28a745; font-weight:700; margin-top:4px; text-align:center;">
+                ✅ {{ main_waffle_ids|length }} waffle seçili
+              </small>
+              {% endif %}
+            </div>
+            
+            <!-- 🎁 BEDAVA İÇECEK/DONDURMA -->
+            <div class="combo-pool" style="margin-top:14px;">
+              <div class="combo-pool-h">
+                <h5>🎁 Hangi içecek/dondurma bedava seçilebilsin?</h5>
+                <span class="combo-pool-info">Müşteri bunlardan birini bedava seçecek</span>
+              </div>
+              
+              <input type="text" id="addon_grp_name_{{ p.id }}" 
+                     placeholder="Grup başlığı" 
+                     value="{{ free_addon_group.name if free_addon_group else 'İçeceğinizi Seçin' }}"
+                     style="font-size:12px; margin-bottom:8px;">
+              
+              <div class="combo-checkbox-list">
+                {% set bd_count = namespace(n=0) %}
+                {% for bd in selectable_products %}
+                  {% if bd.product_type == 'beverage' or bd.product_type == 'dessert' %}
+                    {% set bd_count.n = bd_count.n + 1 %}
+                    <label class="combo-checkbox">
+                      <input type="checkbox" class="addon-cb-{{ p.id }}" value="{{ bd.id }}"
+                             {% if bd.id in free_addon_ids %}checked{% endif %}>
+                      <span>{% if bd.product_type == 'beverage' %}🥤{% else %}🍦{% endif %} {{ bd.name }} <small style="color:#888;">(normal {{ bd.base_price }}₺ · kampanyada 🆓)</small></span>
+                    </label>
+                  {% endif %}
+                {% endfor %}
+                {% if bd_count.n == 0 %}
+                  <p style="color:#888; text-align:center; font-size:11px; padding:10px;">
+                    ⚠️ Henüz içecek/dondurma yok. Önce Ürünler tab'ından ekle.
+                  </p>
+                {% endif %}
+              </div>
+              
+              <button class="btn-small btn-save" onclick="saveFreeAddons({{ p.id }})" style="width:100%; padding:10px; margin-top:8px;">
+                💾 Bedava Ek Seçeneklerini Kaydet
+              </button>
+              {% if free_addon_ids %}
+              <small style="display:block; color:#28a745; font-weight:700; margin-top:4px; text-align:center;">
+                ✅ {{ free_addon_ids|length }} ürün seçili
+              </small>
+              {% endif %}
+            </div>
+            
+            <div style="background:#fff3cd; padding:10px; border-radius:8px; margin-top:12px; font-size:11px; color:#856404; line-height:1.5;">
+              💡 <b>Nasıl çalışır?</b><br>
+              1️⃣ Müşteri kampanya kartına tıklar<br>
+              2️⃣ Yukarıdan bir <b>waffle türü</b> seçer<br>
+              3️⃣ Seçtiği waffle'ın malzemelerini ekler (Klasik kuralları geçerli)<br>
+              4️⃣ Bedava ek olarak bir <b>içecek veya dondurma</b> seçer<br>
+              5️⃣ Sepete ekler
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
+      <p style="color:#888; text-align:center;">Henüz ürün yok</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- TAB: MASALAR -->
+  <div id="masalar" class="tab-content">
+    <div class="card">
+      <h3>🪑 Yeni Masa Ekle</h3>
+      <label>Masa Adı / Numarası</label>
+      <input id="tableName" placeholder="Örn: 1, 2, Bahçe-A">
+      <label>Konum (opsiyonel)</label>
+      <input id="tableLocation" placeholder="Örn: İç salon, Teras">
+      <div style="height:10px;"></div>
+      <button class="btn" onclick="saveTable()">+ Masa Ekle</button>
+    </div>
+
+    <div class="card">
+      <h3>📲 Masa QR Kodları</h3>
+      <p style="color:#888; font-size:12px; margin-bottom:10px;">Her QR'ı yazdır ve ilgili masaya yapıştır.</p>
+      {% if tables %}
+      <div class="qr-grid">
+        {% for t in tables %}
+        <div class="qr-card">
+          <img src="/qr/{{ t.id }}" alt="QR Masa {{ t.table_number }}">
+          <div class="name">🪑 Masa {{ t.table_number }}</div>
+          {% if t.location %}<div class="loc">📍 {{ t.location }}</div>{% endif %}
+          <div class="actions">
+            <a href="/qr/{{ t.id }}" download="masa_{{ t.table_number }}_qr.png" class="dl-btn">📥 İndir</a>
+            <button class="print-btn" onclick="printQR({{ t.id }}, '{{ t.table_number }}')">🖨️ Yazdır</button>
+            <button class="del-btn" onclick="delTable({{ t.id }})">🗑️</button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="color:#888; text-align:center;">Henüz masa yok.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- TAB: AYARLAR -->
+  <div id="ayarlar" class="tab-content">
+    <div class="card" style="background:linear-gradient(135deg,#e3f2fd,#bbdefb); border-left:4px solid #1976d2;">
+      <h3 style="color:#1976d2;">📱 Telegram Bildirimleri</h3>
+      <p style="color:#0d47a1; font-size:13px; margin-bottom:12px;">
+        Yeni sipariş geldiğinde Telegram grubuna otomatik bildirim gider.<br>
+        <b>Test butonuna basarak</b> bot'un çalışıp çalışmadığını kontrol et.
+      </p>
+      <button class="btn-small btn-save" onclick="testTelegram()" style="width:100%; padding:12px; background:linear-gradient(135deg,#1976d2,#42a5f5); color:white;">
+        🧪 Test Bildirimi Gönder
+      </button>
+      <p style="font-size:11px; color:#666; margin-top:8px; text-align:center;">
+        💡 TOKEN veya GRUP ID değiştirmek için <code>routes.py</code> dosyasını düzenle
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>🔐 PIN Değiştirme</h3>
+      <p style="color:#888; font-size:12px; margin-bottom:14px;">
+        PIN <b>4-12 karakter</b> olabilir.<br>
+        <span style="color:#d63384;">⚠️ PIN değiştirdikten sonra Flask'ı yeniden başlat.</span>
+      </p>
+      <div class="pin-section">
+        <h4>👤 Yönetici PIN <span style="font-size:11px; color:#888; font-weight:600;">— master key, her panele geçerli</span></h4>
+        <input type="text" id="pin_yonetici" placeholder="Örn: Admin@2024" maxlength="12" autocomplete="off">
+        <div style="height:6px;"></div>
+        <button class="btn-small btn-save" onclick="changePin('yonetici')" style="width:100%; padding:10px;">💾 Yönetici PIN Kaydet</button>
+      </div>
+      <div class="pin-section mutfak-pin">
+        <h4>👨‍🍳 Mutfak PIN</h4>
+        <input type="text" id="pin_mutfak" placeholder="Örn: Mutfak2024" maxlength="12" autocomplete="off">
+        <div style="height:6px;"></div>
+        <button class="btn-small btn-save" onclick="changePin('mutfak')" style="width:100%; padding:10px;">💾 Mutfak PIN Kaydet</button>
+      </div>
+      <div class="pin-section kasa-pin">
+        <h4>💰 Kasa PIN</h4>
+        <input type="text" id="pin_kasa" placeholder="Örn: Kasa!2024" maxlength="12" autocomplete="off">
+        <div style="height:6px;"></div>
+        <button class="btn-small btn-save" onclick="changePin('kasa')" style="width:100%; padding:10px;">💾 Kasa PIN Kaydet</button>
+      </div>
+      <div style="background:#fff3cd; padding:12px; border-radius:10px; margin-top:14px; font-size:12px; color:#856404;">
+        ⚠️ <b>NOT:</b> PIN değiştirdikten sonra Flask'ı yeniden başlatman gerekiyor.
+      </div>
+    </div>
+  </div>
+
+  <a href="/"><button class="btn btn-ghost" style="margin-top: 14px; margin-bottom: 40px;">← Ana sayfa</button></a>
+</div>
+
+<script>
+function showTab(ev, name) {
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('show'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(name).classList.add('show');
+  if (ev && ev.target) ev.target.classList.add('active');
+  history.replaceState(null, '', '#' + name);
+}
+
+function reloadKeepingTab() { location.reload(); }
+
+function toggleRule(id) {
+  const el = document.getElementById('rule_form_' + id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleEdit(id) {
+  const el = document.getElementById('edit_form_' + id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function api(url, method, body) {
+  const opts = { method, headers: {'Content-Type': 'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    const r = await fetch(url, opts);
+    return await r.json();
+  } catch (e) {
+    return { ok: false, error: 'Bağlantı hatası' };
+  }
+}
+
+async function saveCategory() {
+  const name = document.getElementById('catName').value.trim();
+  if (!name) return alert('Ad gerekli');
+  const r = await api('/api/category', 'POST', {
+    name, type: document.getElementById('catType').value, icon: document.getElementById('catIcon').value
+  });
+  if (r.ok) reloadKeepingTab();
+  else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+async function delCategory(id) {
+  if (!confirm('Kategoriyi sil? Altındaki ürünler de silinecek!')) return;
+  const r = await api('/api/category/' + id, 'DELETE');
+  if (r.ok) reloadKeepingTab();
+  else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+async function saveRule(catId) {
+  const useOwn = document.getElementById('use_own_' + catId).checked;
+  const r = await api('/api/rule', 'POST', {
+    category_id: catId,
+    free_count: document.getElementById('free_' + catId).value,
+    extra_price: document.getElementById('extra_' + catId).value,
+    use_own_price: useOwn
+  });
+  if (r.ok) { 
+    alert(useOwn ? '✅ Kural kaydedildi — Kendi fiyatından satılacak' : '✅ Kural kaydedildi'); 
+    reloadKeepingTab(); 
+  } else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+async function deleteRule(catId) {
+  if (!confirm('Kuralı sil?')) return;
+  const r = await api('/api/rule/' + catId, 'DELETE');
+  if (r.ok) reloadKeepingTab();
+  else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+async function saveProduct() {
+  const name = document.getElementById('prodName').value.trim();
+  if (!name) return alert('Ad gerekli');
+  const r = await api('/api/product', 'POST', {
+    name,
+    description: document.getElementById('prodDesc').value,
+    type: document.getElementById('prodType').value,
+    category_id: document.getElementById('prodCat').value,
+    price: document.getElementById('prodPrice').value
+  });
+  if (r.ok) reloadKeepingTab();
+  else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+async function saveProductEdit(id) {
+  const r = await api('/api/product/' + id, 'PUT', {
+    name: document.getElementById('edit_name_' + id).value,
+    price: document.getElementById('edit_price_' + id).value,
+    description: document.getElementById('edit_desc_' + id).value
+  });
+  if (r.ok) reloadKeepingTab();
+  else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+// 🎁 Kampanya: malzeme kuralı kaynağını ayarla
+async function saveCopyRules(id) {
+  const val = document.getElementById('copy_rules_' + id).value;
+  const r = await api('/api/product/' + id, 'PUT', {
+    copy_rules_from: val || null
+  });
+  if (r.ok) {
+    alert('✅ Kural kaynağı kaydedildi!\n\nMüşteri kampanyayı seçince ' + 
+          (val ? 'seçtiğin ürünün malzeme ekranı' : 'malzeme ekranı YOK, sadece zorunlu seçim') + 
+          ' gösterilecek.');
+    reloadKeepingTab();
+  } else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+async function delProduct(id) {
+  if (!confirm('Ürünü sil?')) return;
+  const r = await api('/api/product/' + id, 'DELETE');
+  if (r.ok) reloadKeepingTab();
+  else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+async function toggleStock(id) {
+  const btn = event.target;
+  const productRow = document.getElementById('prod_row_' + id);
+  const originalText = btn.textContent;
+  btn.textContent = '⏳ ...';
+  btn.disabled = true;
+  const r = await api('/api/product/' + id + '/toggle-stock', 'POST');
+  btn.disabled = false;
+  if (r.ok) {
+    if (r.is_out_of_stock) {
+      btn.textContent = '✅ Stokta var';
+      btn.style.background = '#28a745';
+      if (productRow) productRow.classList.add('product-out-of-stock');
+    } else {
+      btn.textContent = '⚠️ Bitti';
+      btn.style.background = '#dc3545';
+      if (productRow) productRow.classList.remove('product-out-of-stock');
+    }
+  } else {
+    btn.textContent = originalText;
+    alert('Hata: ' + (r.error || 'bilinmeyen'));
+  }
+}
+
+async function uploadPhoto(id) {
+  const fileInput = document.getElementById('photo_' + id);
+  const file = fileInput.files[0];
+  if (!file) { alert('📷 Önce bir fotoğraf seç'); return; }
+  if (file.size > 8 * 1024 * 1024) { alert('⚠️ Dosya çok büyük (max 8 MB)'); return; }
+  const fd = new FormData();
+  fd.append('image', file);
+  try {
+    const res = await fetch('/api/product/' + id + '/upload-image', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.ok) {
+      alert('✅ Fotoğraf yüklendi!');
+      reloadKeepingTab();
+    } else alert('Hata: ' + (data.error || 'bilinmeyen'));
+  } catch (e) {
+    alert('Bağlantı hatası: ' + e.message);
+  }
+}
+
+async function deletePhoto(id) {
+  if (!confirm('Fotoğrafı sil?')) return;
+  const r = await api('/api/product/' + id + '/delete-image', 'DELETE');
+  if (r.ok) reloadKeepingTab();
+  else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+async function saveTable() {
+  const name = document.getElementById('tableName').value.trim();
+  if (!name) return alert('Masa adı gerekli');
+  const r = await api('/api/table', 'POST', {
+    table_number: name,
+    location: document.getElementById('tableLocation').value.trim()
+  });
+  if (r.ok) reloadKeepingTab();
+  else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+async function delTable(id) {
+  if (!confirm('Masayı sil?')) return;
+  const r = await api('/api/table/' + id, 'DELETE');
+  if (r.ok) reloadKeepingTab();
+  else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+// ============ 🎁 COMBO / ZORUNLU SEÇİM ============
+const comboProducts = {}; // { productId: [{id, name, extra_price}, ...] }
+
+function toggleComboForm(prodId) {
+  const el = document.getElementById('combo_form_' + prodId);
+  const wasHidden = el.style.display === 'none';
+  el.style.display = wasHidden ? 'block' : 'none';
+  if (!comboProducts[prodId]) comboProducts[prodId] = [];
+  // Form yeni açılıyorsa: dropdown'u filtre (varsayılan free_addon)
+  if (wasHidden) {
+    onComboTypeChange(prodId);
+  }
+}
+
+function addComboProduct(prodId) {
+  const sel = document.getElementById('combo_prod_sel_' + prodId);
+  const extra = parseFloat(document.getElementById('combo_extra_' + prodId).value) || 0;
+  if (!sel.value) { alert('Önce bir ürün seç'); return; }
+  
+  const id = parseInt(sel.value);
+  const name = sel.options[sel.selectedIndex].dataset.name;
+  
+  if (!comboProducts[prodId]) comboProducts[prodId] = [];
+  
+  // Aynı ürün varsa engelle
+  if (comboProducts[prodId].find(p => p.id === id)) {
+    alert('Bu ürün zaten ekli');
+    return;
+  }
+  
+  comboProducts[prodId].push({ id, name, extra_price: extra });
+  refreshComboProdList(prodId);
+  sel.value = '';
+  document.getElementById('combo_extra_' + prodId).value = '0';
+}
+
+function removeComboProduct(prodId, itemId) {
+  if (!comboProducts[prodId]) return;
+  comboProducts[prodId] = comboProducts[prodId].filter(p => p.id !== itemId);
+  refreshComboProdList(prodId);
+}
+
+function refreshComboProdList(prodId) {
+  const list = document.getElementById('combo_prod_list_' + prodId);
+  if (!list) return;
+  const items = comboProducts[prodId] || [];
+  if (items.length === 0) {
+    list.innerHTML = '<p style="color:#888; font-size:11px; text-align:center; margin:6px 0;">Henüz ürün eklenmedi</p>';
+    return;
+  }
+  list.innerHTML = items.map(p => `
+    <span class="combo-prod-item">
+      ${p.name} ${p.extra_price > 0 ? '+' + p.extra_price + '₺' : '(Bedava)'}
+      <button onclick="removeComboProduct(${prodId}, ${p.id})">×</button>
+    </span>
+  `).join('');
+}
+
+// ============================================================
+// 🎁 KAMPANYA: BASİT CHECKBOX KAYDETME (V4)
+// ============================================================
+async function saveMainWaffles(prodId) {
+  const checkboxes = document.querySelectorAll('.waffle-cb-' + prodId + ':checked');
+  const product_ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
+  const group_name = document.getElementById('waffle_grp_name_' + prodId).value.trim() || 'Waffle Türünü Seçin';
+  
+  if (product_ids.length === 0) {
+    if (!confirm('Hiç waffle seçilmedi. Tüm waffle seçeneklerini kaldırmak istediğine emin misin?')) return;
+  }
+  
+  const r = await api('/api/campaign/' + prodId + '/set-main-waffles', 'POST', {
+    product_ids,
+    group_name
+  });
+  
+  if (r.ok) {
+    if (product_ids.length === 0) {
+      alert('🗑️ Tüm waffle seçenekleri kaldırıldı.');
+    } else {
+      alert('✅ ' + product_ids.length + ' waffle seçeneği kaydedildi!\n\nMüşteri kampanyaya tıklayınca buradan waffle seçecek.');
+    }
+    reloadKeepingTab();
+  } else {
+    alert('❌ Hata: ' + (r.error || 'bilinmeyen'));
+  }
+}
+
+async function saveFreeAddons(prodId) {
+  const checkboxes = document.querySelectorAll('.addon-cb-' + prodId + ':checked');
+  const product_ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
+  const group_name = document.getElementById('addon_grp_name_' + prodId).value.trim() || 'İçeceğinizi Seçin';
+  
+  if (product_ids.length === 0) {
+    if (!confirm('Hiç bedava ek seçilmedi. Tüm bedava ek seçeneklerini kaldırmak istediğine emin misin?')) return;
+  }
+  
+  const r = await api('/api/campaign/' + prodId + '/set-free-addons', 'POST', {
+    product_ids,
+    group_name
+  });
+  
+  if (r.ok) {
+    if (product_ids.length === 0) {
+      alert('🗑️ Tüm bedava ek seçenekleri kaldırıldı.');
+    } else {
+      alert('✅ ' + product_ids.length + ' bedava ek seçeneği kaydedildi!');
+    }
+    reloadKeepingTab();
+  } else {
+    alert('❌ Hata: ' + (r.error || 'bilinmeyen'));
+  }
+}
+
+// ============================================================
+// ESKİ COMBO FORMU (artık kullanılmıyor ama hata vermesin)
+// ============================================================
+async function saveComboGroup(prodId) {
+  const name = document.getElementById('combo_name_' + prodId).value.trim();
+  const icon = document.getElementById('combo_icon_' + prodId).value.trim() || '🎁';
+  const groupType = document.getElementById('combo_type_' + prodId).value || 'free_addon';
+  
+  if (!name) { alert('Grup adı zorunlu'); return; }
+  const items = comboProducts[prodId] || [];
+  if (items.length === 0) { alert('En az 1 seçenek ekle'); return; }
+  
+  // Eğer main_waffle ise: tüm seçimler base ürünü olmalı
+  // Eğer free_addon ise: beverage/dessert olmalı (zorunlu değil ama uyarı)
+  
+  const r = await api('/api/product/' + prodId + '/option-group', 'POST', {
+    name, icon,
+    min_select: 1,
+    max_select: 1,
+    is_required: true,
+    group_type: groupType,
+    product_ids: items.map(p => ({ id: p.id, extra_price: p.extra_price }))
+  });
+  
+  if (r.ok) {
+    alert('✅ ' + (groupType === 'main_waffle' ? 'Ana waffle seçimi grubu eklendi!\n\nMüşteri kampanyaya tıklayınca buradan waffle seçecek ve seçilen waffle\'ın malzemeleri yüklenecek.' : 'Bedava ek grubu eklendi!'));
+    reloadKeepingTab();
+  } else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+// 🎁 Combo türü değişince dropdown'u filtrele
+function onComboTypeChange(prodId) {
+  const groupType = document.getElementById('combo_type_' + prodId).value;
+  const sel = document.getElementById('combo_prod_sel_' + prodId);
+  const nameInput = document.getElementById('combo_name_' + prodId);
+  const iconInput = document.getElementById('combo_icon_' + prodId);
+  
+  // İsim ve ikon önerisi
+  if (groupType === 'main_waffle') {
+    if (!nameInput.value || nameInput.value === 'İçeceğinizi Seçin') {
+      nameInput.value = 'Waffle Türünü Seçin';
+    }
+    if (!iconInput.value || iconInput.value === '🎁' || iconInput.value === '🥤') {
+      iconInput.value = '🧇';
+    }
+    sel.options[0].textContent = '— Waffle ürünü seç —';
+  } else {
+    if (!nameInput.value || nameInput.value === 'Waffle Türünü Seçin') {
+      nameInput.value = 'İçeceğinizi Seçin';
+    }
+    if (!iconInput.value || iconInput.value === '🧇') {
+      iconInput.value = '🎁';
+    }
+    sel.options[0].textContent = '— İçecek/Dondurma seç —';
+  }
+  
+  // Dropdown'da uygun ürünleri göster
+  for (let i = 1; i < sel.options.length; i++) {
+    const opt = sel.options[i];
+    const type = opt.dataset.type;
+    if (groupType === 'main_waffle') {
+      // Sadece base ürünleri göster
+      opt.style.display = (type === 'base') ? '' : 'none';
+    } else {
+      // beverage + dessert göster
+      opt.style.display = (type === 'beverage' || type === 'dessert') ? '' : 'none';
+    }
+  }
+  
+  // Eğer seçili option gizliyse temizle
+  if (sel.selectedIndex > 0 && sel.options[sel.selectedIndex].style.display === 'none') {
+    sel.selectedIndex = 0;
+  }
+}
+
+async function delComboGroup(gid) {
+  if (!confirm('Bu zorunlu seçim grubunu sil?')) return;
+  const r = await api('/api/option-group/' + gid, 'DELETE');
+  if (r.ok) reloadKeepingTab();
+  else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+// ============ DASHBOARD ============
+async function loadDashboard() {
+  try {
+    const res = await fetch('/api/dashboard-stats');
+    const data = await res.json();
+    let html = '';
+    if (!data.top_products || data.top_products.length === 0) {
+      html = '<p style="color:#888; text-align:center; padding:40px 0; font-size:13px;">📊 Bugün henüz sipariş yok</p>';
+    } else {
+      data.top_products.forEach((p, i) => {
+        let medal = '';
+        if (i === 0) medal = '🥇';
+        else if (i === 1) medal = '🥈';
+        else if (i === 2) medal = '🥉';
+        else medal = `<span style="color:#888; font-weight:700;">${i+1}.</span>`;
+        html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:white; border-radius:10px; margin-bottom:8px; box-shadow:0 2px 6px rgba(255,107,157,0.08);">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:20px;">${medal}</span>
+            <b style="color:#2d1b2e;">${p.name}</b>
+          </div>
+          <div style="color:#d63384; font-weight:800; font-size:15px;">${p.count} adet</div>
+        </div>`;
+      });
+    }
+    document.getElementById('topProducts').innerHTML = html;
+  } catch (e) {
+    console.error('Dashboard yükleme hatası:', e);
+    document.getElementById('topProducts').innerHTML = '<p style="color:#dc3545; text-align:center;">⚠️ Veri yüklenemedi</p>';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const hash = window.location.hash.replace('#', '');
+  if (hash && document.getElementById(hash)) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('show'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(hash).classList.add('show');
+    const tabBtn = document.querySelector(`.tab[data-tab="${hash}"]`);
+    if (tabBtn) tabBtn.classList.add('active');
+  } else {
+    document.getElementById('dashboard').classList.add('show');
+    document.querySelector('.tab[data-tab="dashboard"]').classList.add('active');
+  }
+  loadDashboard();
+  setInterval(loadDashboard, 60000);
+});
+
+function printQR(tableId, tableNumber) {
+  const w = window.open('', '_blank');
+  w.document.write(`
+    <!DOCTYPE html>
+    <html><head><title>QR Masa ${tableNumber}</title>
+    <style>
+      body { font-family: Arial; text-align: center; padding: 40px; }
+      h1 { color: #ff4d8c; font-size: 48px; margin: 20px 0; }
+      .brand { color: #ff6b9d; font-size: 32px; font-weight: 800; margin-bottom: 10px; }
+      img { max-width: 350px; margin: 20px auto; display: block; }
+      .instructions { background: #fff5f8; padding: 14px; border-radius: 12px; max-width: 400px; margin: 20px auto; }
+      @media print { body { padding: 20px; } }
+    </style></head><body>
+      <div class="brand">iyb waffle 🧇</div>
+      <h1>Masa ${tableNumber}</h1>
+      <img src="/qr/${tableId}" alt="QR">
+      <div class="instructions">
+        <p>📱 QR'ı telefonla okutun</p>
+        <p>🧇 Siparişinizi verin</p>
+        <p>🎉 Keyfini çıkarın</p>
+      </div>
+    </body></html>
+  `);
+  w.document.close();
+  setTimeout(() => w.print(), 500);
+}
+
+function validatePin(pin) {
+  if (!pin || pin.length < 4 || pin.length > 12) return 'PIN 4-12 karakter olmalı';
+  const pattern = /^[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]+$/;
+  if (!pattern.test(pin)) return 'PIN sadece harf, rakam ve noktalama içerebilir';
+  return null;
+}
+
+async function changePin(role) {
+  const pin = document.getElementById('pin_' + role).value.trim();
+  const err = validatePin(pin);
+  if (err) return alert('⚠️ ' + err);
+  if (!confirm(`${role.toUpperCase()} PIN'i "${pin}" olarak değiştirilsin mi?`)) return;
+  const r = await api('/api/pin', 'POST', { role, pin });
+  if (r.ok) {
+    alert(`✅ ${role.toUpperCase()} PIN değiştirildi!\n\n⚠️ Şimdi Flask'ı yeniden başlat.`);
+    document.getElementById('pin_' + role).value = '';
+  } else alert('Hata: ' + (r.error || 'bilinmeyen'));
+}
+
+async function testTelegram() {
+  if (!confirm('Telegram grubuna test mesajı gönderilsin mi?')) return;
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.textContent = '⏳ Gönderiliyor...';
+  btn.disabled = true;
+  const r = await api('/api/telegram-test', 'POST');
+  btn.textContent = originalText;
+  btn.disabled = false;
+  if (r.ok) {
+    alert('✅ Test bildirimi gönderildi!\n\nTelegram grubuna bak, mesaj geldi mi?');
+  } else {
+    alert('❌ HATA: ' + (r.error || 'bilinmeyen'));
+  }
+}
+</script>
+{% endblock %}

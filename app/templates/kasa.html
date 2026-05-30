@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block title %}Kasa — iyb waffle{% endblock %}
+{% block head %}
+<style>
+@media (prefers-color-scheme: dark) {
+  body { background: linear-gradient(135deg, #fff5f8, #ffe8f0) !important; color: #2d1b2e !important; }
+}
+
+body { background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 50%, #fff0f5 100%); }
+
+.header { 
+  display: flex; justify-content: space-between; align-items: center; 
+  padding: 16px 0; gap: 12px;
+}
+.header h1 { 
+  font-size: 26px;
+  background: linear-gradient(135deg, #ff4d8c, #ff8db5);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 900; letter-spacing: -0.5px;
+}
+
+.stats { 
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;
+}
+.stat-card { 
+  background: linear-gradient(135deg, #ff4d8c, #ff8db5);
+  color: white; padding: 16px 14px; border-radius: 18px; text-align: center;
+  box-shadow: 0 6px 20px rgba(255, 77, 140, 0.3);
+}
+.stat-card.green { background: linear-gradient(135deg, #28a745, #20c997); box-shadow: 0 6px 20px rgba(40,167,69,0.3); }
+.stat-card .val { font-size: 26px; font-weight: 900; letter-spacing: -1px; }
+.stat-card .lbl { font-size: 11px; opacity: 0.9; margin-top: 2px; }
+
+.section-title { 
+  font-size: 18px; font-weight: 800; color: #d63384; 
+  margin: 18px 0 10px; display: flex; align-items: center; gap: 8px;
+}
+
+.table-card { 
+  background: white; border-radius: 20px; padding: 16px; margin-bottom: 14px;
+  box-shadow: 0 6px 20px rgba(255, 107, 157, 0.12);
+  border-left: 8px solid #ff6b9d;
+  transition: all 0.3s;
+}
+.table-card.takeaway { border-left-color: #ffa500; }
+
+.table-head { 
+  display: flex; justify-content: space-between; align-items: flex-start; 
+  margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px dashed #ffe0ec;
+}
+.table-pill { 
+  background: linear-gradient(135deg, #ff4d8c, #ff8db5); color: white; 
+  padding: 8px 16px; border-radius: 999px; font-weight: 800; font-size: 16px;
+  display: inline-block;
+}
+.table-pill.takeaway { background: linear-gradient(135deg, #ffa500, #ffb84d); }
+.table-total { 
+  font-size: 22px; color: #d63384; font-weight: 900; letter-spacing: -0.5px;
+  text-align: right;
+}
+.table-total small { display: block; font-size: 11px; color: #888; font-weight: 600; letter-spacing: 0; }
+
+.order-row { 
+  background: linear-gradient(135deg, #fff5f8, #ffe8f0);
+  padding: 12px; border-radius: 14px; margin: 8px 0;
+  border: 1px solid rgba(255, 107, 157, 0.15);
+}
+.order-row-head { display: flex; justify-content: space-between; align-items: center; }
+.customer-name { font-weight: 800; color: #2d1b2e; font-size: 15px; }
+.customer-meta { font-size: 11px; color: #888; }
+.order-price { color: #d63384; font-weight: 800; font-size: 16px; }
+
+.plates-list { margin: 8px 0; font-size: 12px; color: #6b4a5d; line-height: 1.5; }
+.plate-mini { background: white; padding: 6px 10px; border-radius: 9px; margin-top: 4px; }
+
+.btn-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.btn-pay-single { 
+  background: #28a745; color: white; border: none; 
+  padding: 7px 12px; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer;
+}
+.btn-cancel { 
+  background: #ffb3c5; color: #d63384; border: none; 
+  padding: 7px 12px; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer;
+}
+
+.btn-pay-all { 
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white; border: none; 
+  padding: 14px; border-radius: 14px; font-weight: 800; font-size: 15px; 
+  cursor: pointer; width: 100%; margin-top: 12px;
+  box-shadow: 0 6px 16px rgba(40,167,69,0.4);
+  transition: all 0.2s;
+}
+.btn-pay-all:active { transform: scale(0.97); }
+
+.empty-state { 
+  text-align: center; padding: 60px 20px; color: #a86b8a;
+  background: white; border-radius: 20px;
+  box-shadow: 0 4px 14px rgba(255,107,157,0.1);
+}
+.empty-state .icon { font-size: 60px; margin-bottom: 12px; }
+
+.live-dot { 
+  display: inline-block; width: 8px; height: 8px; background: #28a745; 
+  border-radius: 50%; margin-right: 6px; animation: blink 1.5s infinite;
+}
+@keyframes blink { 50% { opacity: 0.3; } }
+
+.logout-btn { 
+  background: #ffb3c5; color: white; padding: 8px 14px; 
+  border-radius: 10px; text-decoration: none; font-size: 12px; font-weight: 700;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="header">
+    <div>
+      <h1>iyb waffle 🧇</h1>
+      <p style="color: #a86b8a; font-size: 12px; margin-top: 2px;"><span class="live-dot"></span>💰 Kasa · Canlı</p>
+    </div>
+    <a href="/{{ admin_prefix }}-cikis?target=kasa" class="logout-btn">🚪 Çıkış</a>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card green">
+      <div class="val" id="dailyRev">0₺</div>
+      <div class="lbl">Bugünkü Ciro</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="dailyCount">0</div>
+      <div class="lbl">Tahsil Edilen Sipariş</div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    💰 Ödeme Bekleyen Hesaplar <span id="pendingCount" style="background:#ff6b9d; color:white; padding:3px 10px; border-radius:999px; font-size:13px;">0</span>
+  </div>
+
+  <div id="tableList">
+    <div class="empty-state"><div class="icon">⏳</div>Yükleniyor...</div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PREFIX = "{{ admin_prefix }}";
+
+async function loadKasa() {
+  try {
+    const res = await fetch('/api/kasa/orders');
+    if (!res.ok) {
+      if (res.status === 403) { window.location.href = '/' + ADMIN_PREFIX + '-giris?target=kasa'; return; }
+      throw new Error('HTTP ' + res.status);
+    }
+    const data = await res.json();
+    
+    document.getElementById('dailyRev').textContent = data.daily_revenue.toFixed(0) + '₺';
+    document.getElementById('dailyCount').textContent = data.daily_count;
+    document.getElementById('pendingCount').textContent = data.tables.length;
+    
+    const list = document.getElementById('tableList');
+    
+    if (data.tables.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="icon">✅</div><b>Hiç ödeme bekleyen sipariş yok</b><br><small style="color:#bbb;">Yeni siparişler mutfakta hazırlanınca burada görünür</small></div>';
+      return;
+    }
+    
+    list.innerHTML = data.tables.map(t => `
+      <div class="table-card ${t.is_takeaway ? 'takeaway' : ''}">
+        <div class="table-head">
+          <div>
+            <span class="table-pill ${t.is_takeaway ? 'takeaway' : ''}">
+              ${t.is_takeaway ? '📦 PAKET' : '🪑 Masa ' + t.table_no}
+            </span>
+            <div style="font-size:11px; color:#888; margin-top:6px;">${t.orders.length} sipariş</div>
+          </div>
+          <div class="table-total">
+            <small>TOPLAM</small>
+            ${t.total.toFixed(2)} TL
+          </div>
+        </div>
+        
+        ${t.orders.map(o => `
+          <div class="order-row">
+            <div class="order-row-head">
+              <div>
+                <div class="customer-name">👤 ${o.customer_name}</div>
+                ${o.customer_phone ? `<div class="customer-meta">📱 ${o.customer_phone}</div>` : ''}
+                ${o.customer_address ? `<div class="customer-meta">📍 ${o.customer_address}</div>` : ''}
+                <div class="customer-meta">🕐 ${o.created_at} · #${o.id}</div>
+              </div>
+              <div class="order-price">${o.total.toFixed(2)} TL</div>
+            </div>
+            <div class="plates-list">
+              ${o.plates.map(p => {
+                const isCombo = p.options && p.options.length > 0;
+                const titleIcon = isCombo ? '🎁' : '🧇';
+                const comboTag = isCombo ? '<span style="background:linear-gradient(135deg,#ff4d8c,#ff8db5); color:white; font-size:9px; font-weight:900; padding:2px 7px; border-radius:999px; margin-left:4px;">KAMPANYA</span>' : '';
+                
+                // Main waffle seçimini bul ve ayır
+                let mainWaffleName = null;
+                let otherOptions = p.options || [];
+                if (isCombo && p.options && p.options.length > 0) {
+                  const possibleWaffleOpt = p.options.find(o => 
+                    o.group_name && (o.group_name.toLowerCase().includes('waffle') || o.group_name.toLowerCase().includes('tür'))
+                  );
+                  if (possibleWaffleOpt) {
+                    mainWaffleName = possibleWaffleOpt.name;
+                    otherOptions = p.options.filter(o => o !== possibleWaffleOpt);
+                  }
+                }
+                
+                const mainWaffleHtml = mainWaffleName
+                  ? `<div style="margin-top:4px; font-size:12px; color:#155724; background:#d4edda; padding:4px 8px; border-radius:6px; font-weight:700;">🧇 ${mainWaffleName}</div>`
+                  : '';
+                
+                const optionsHtml = (otherOptions && otherOptions.length > 0)
+                  ? `<div style="margin-top:4px; font-size:11px; color:#856404; background:#fff8e1; padding:4px 8px; border-radius:6px;">
+                       ${otherOptions.map(op => `🎁 <b>${op.group_name}:</b> ${op.name}`).join(' · ')}
+                     </div>`
+                  : '';
+                
+                const ingredients = p.ingredients && p.ingredients.length > 0
+                  ? `<small style="color:#888;">${p.ingredients.map(i => i.name).join(', ')}</small>`
+                  : '';
+                return `
+                  <div class="plate-mini" style="${isCombo ? 'border-left:3px solid #ff4d8c;' : ''}">
+                    ${titleIcon} <b>${p.base_name}</b>${comboTag}
+                    ${mainWaffleHtml}
+                    ${ingredients}
+                    ${optionsHtml}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            ${o.note ? `<div style="background:#fff3cd; padding:6px 10px; border-radius:8px; font-size:12px; margin-top:6px;">📝 ${o.note}</div>` : ''}
+            <div class="btn-row">
+              <button class="btn-pay-single" onclick="paySingle(${o.id}, '${o.customer_name}')">💰 ${o.customer_name} Ödedi</button>
+              <button class="btn-cancel" onclick="cancelOrder(${o.id}, '${o.customer_name}')">❌ İptal</button>
+            </div>
+          </div>
+        `).join('')}
+        
+        <button class="btn-pay-all" onclick="payAll(${t.table_id}, ${t.is_takeaway}, ${t.total.toFixed(2)}, '${t.is_takeaway ? 'Paket' : 'Masa ' + t.table_no}')">
+          ✅ Tüm Hesabı Tahsil Et · ${t.total.toFixed(2)} TL
+        </button>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error('Kasa yükleme hatası:', e);
+    document.getElementById('tableList').innerHTML = '<div class="empty-state">⚠️ Hata: ' + e.message + '</div>';
+  }
+}
+
+async function paySingle(orderId, name) {
+  if (!confirm(`${name} ödedi olarak işaretlensin mi?`)) return;
+  await fetch('/api/kasa/pay-order/' + orderId, {method: 'POST'});
+  if (window.confetti) confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors: ['#28a745','#5cb85c','#fff']});
+  loadKasa();
+}
+
+async function payAll(tableId, isTakeaway, total, label) {
+  if (!confirm(`${label} hesabı ödendi olarak işaretlensin mi?\nToplam: ${total} TL`)) return;
+  await fetch('/api/kasa/pay-table', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ table_id: tableId, is_takeaway: isTakeaway })
+  });
+  if (window.confetti) confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 }, colors: ['#28a745','#5cb85c','#fff','#ffd700']});
+  loadKasa();
+}
+
+async function cancelOrder(orderId, name) {
+  if (!confirm(`${name} siparişi iptal edilsin mi?\n(Bu işlem geri alınamaz)`)) return;
+  await fetch('/api/kasa/cancel/' + orderId, {method: 'POST'});
+  loadKasa();
+}
+
+loadKasa();
+setInterval(loadKasa, 3000);
+</script>
+{% endblock %}

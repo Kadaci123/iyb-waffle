@@ -1,0 +1,525 @@
+{% extends "base.html" %}
+{% block title %}Mutfak — iyb waffle{% endblock %}
+{% block head %}
+<style>
+.order-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 768px) { .order-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1100px) { .order-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.order-card { background: white; border-radius: 16px; padding: 14px; border-left: 6px solid #ff6b9d; box-shadow: 0 4px 16px rgba(255,107,157,0.18); transition: all .3s; }
+.order-card.preparing { border-left-color: #ffa500; background: linear-gradient(135deg, #fffbf0, #fff); }
+.order-card.new-flash { animation: newOrderFlash 1.5s ease; }
+@keyframes newOrderFlash { 
+  0% { transform: scale(0.9); background: #ffe0ec; box-shadow: 0 0 0 8px #ff6b9d; }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); background: white; }
+}
+
+.order-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px dashed #ffd6e3;}
+.order-time { font-size: 13px; color: #888; font-weight: 600; }
+.masa-pill { background: linear-gradient(135deg,#ff6b9d,#ff8db5); color: white; padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; }
+.order-id { color: #999; font-size: 12px; font-weight: 600; margin-left: 6px; }
+
+.plate-block { 
+  background: #fff5f8; 
+  padding: 12px; 
+  border-radius: 12px; 
+  margin: 8px 0; 
+  border: 2px solid #ffe0ec;
+}
+.plate-title { 
+  font-size: 16px; 
+  font-weight: 800; 
+  color: #2d1b2e; 
+  margin-bottom: 8px; 
+  padding-bottom: 6px;
+  border-bottom: 1px dashed #ffb3c5;
+}
+
+.malzeme-section { margin-top: 8px; }
+.malzeme-label { 
+  font-size: 11px; 
+  font-weight: 800; 
+  color: #d63384; 
+  text-transform: uppercase; 
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.malzeme-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.ing-chip { 
+  display: inline-block; 
+  background: white; 
+  padding: 5px 11px; 
+  border-radius: 999px; 
+  font-size: 13px; 
+  font-weight: 700; 
+  border: 2px solid #ffd6e3;
+  color: #2d1b2e;
+}
+.ing-chip.free { background: #d4edda; border-color: #28a745; color: #155724; }
+
+.plate-extras {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px solid #ffb3c5;
+}
+.extras-block {
+  background: white;
+  padding: 8px 11px;
+  border-radius: 10px;
+  margin-top: 6px;
+}
+.extras-block.bev { border-left: 4px solid #1976d2; background: #e3f2fd; }
+.extras-block.dessert { border-left: 4px solid #d63384; background: #fce4ec; }
+.extras-label { 
+  font-size: 12px; 
+  font-weight: 800; 
+  margin-bottom: 4px;
+}
+.extras-label.bev { color: #1976d2; }
+.extras-label.dessert { color: #d63384; }
+.extras-list { font-size: 14px; font-weight: 700; color: #2d1b2e; }
+
+.standalone-section {
+  margin: 12px 0 0 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.standalone-bevs {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border: 3px solid #1976d2;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+.standalone-desserts {
+  background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+  border: 3px solid #d63384;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+.standalone-title {
+  font-size: 14px;
+  font-weight: 900;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.standalone-bevs .standalone-title { color: #0d47a1; }
+.standalone-desserts .standalone-title { color: #ad1457; }
+.standalone-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.standalone-chip {
+  background: white;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #2d1b2e;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* 🎁 KAMPANYA tabağı - mutfakta belirgin görünsün */
+.plate-block.is-combo {
+  background: linear-gradient(135deg, #fff4f9, #ffe0ec);
+  border: 3px solid #ff4d8c;
+  position: relative;
+}
+.plate-block.is-combo::before {
+  content: '🎁 KAMPANYA';
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  background: linear-gradient(135deg, #ff4d8c, #ff8db5);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  box-shadow: 0 2px 8px rgba(255,77,140,0.4);
+  z-index: 2;
+}
+.plate-block.is-combo .plate-title {
+  color: #d63384;
+  padding-top: 6px;
+}
+
+/* Kampanya seçim chip'leri (bedava içecek vb.) */
+.combo-options {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px solid #ffb3c5;
+}
+.combo-opt-block {
+  background: linear-gradient(135deg, #fff3cd, #fff8e1);
+  border: 2px solid #ffa500;
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-top: 6px;
+}
+.combo-opt-label {
+  font-size: 11px;
+  font-weight: 900;
+  color: #856404;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.combo-opt-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #2d1b2e;
+}
+
+/* 🎁 KAMPANYA bölümü */
+.campaign-section {
+  background: linear-gradient(135deg, #fff4f9, #ffe0ec);
+  border: 3px solid #ff4d8c;
+  border-radius: 14px;
+  padding: 12px;
+  margin: 12px 0;
+  position: relative;
+}
+.campaign-section::before {
+  content: '🎁 KAMPANYA';
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  background: linear-gradient(135deg, #ff4d8c, #ff8db5);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  box-shadow: 0 2px 8px rgba(255,77,140,0.4);
+}
+.campaign-item {
+  background: white;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin: 6px 0;
+  border-left: 4px solid #ff4d8c;
+}
+.campaign-item-title {
+  font-weight: 900;
+  color: #d63384;
+  font-size: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.campaign-qty-badge {
+  background: #ff4d8c;
+  color: white;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.campaign-includes {
+  font-size: 12px;
+  color: #6b4a5d;
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+.actions { display: flex; gap: 8px; margin-top: 10px; }
+.actions button { flex: 1; padding: 11px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; font-size: 13px; color: white; }
+.btn-prep { background: #ffa500; }
+.btn-ready { background: #28a745; }
+
+.empty-state { text-align:center; padding: 60px 20px; color:#a86b8a; grid-column: 1/-1; font-size: 16px; }
+.live-dot { display:inline-block; width:9px; height:9px; background:#28a745; border-radius:50%; margin-right:5px; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0.3; } }
+
+.notification { position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #28a745, #5cb85c); color: white; padding: 14px 22px; border-radius: 12px; font-weight: 800; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 1000; transform: translateX(450px); transition: transform .4s; }
+.notification.show { transform: translateX(0); }
+
+.sound-toggle { background: white; border: 2px solid #ffd6e3; padding: 7px 12px; border-radius: 9px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.total-badge { display:inline-block; background: #fff5f8; padding: 5px 11px; border-radius: 9px; color: #ff4d8c; font-weight: 800; font-size: 14px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 1200px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; padding: 14px 0;">
+    <div>
+      <div class="brand" style="font-size: 26px;">iyb waffle 🧇</div>
+      <div style="font-size: 12px; color: #888; margin-top: 4px;">
+        <span class="live-dot"></span> <b id="orderCount">0</b> Aktif Sipariş
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <button id="soundToggle" class="sound-toggle" onclick="toggleSound()">🔊 Ses Açık</button>
+      <a href="/{{ admin_prefix }}-cikis?target=mutfak" style="background:#ffb3c5; color:white; padding:8px 12px; border-radius:10px; text-decoration:none; font-size:12px;">🚪 Çıkış</a>
+    </div>
+  </div>
+
+  <div class="order-grid" id="orderGrid">
+    <div class="empty-state">🍽️ Henüz sipariş yok</div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PREFIX = "{{ admin_prefix }}";
+
+// ============ SES ============
+let soundEnabled = localStorage.getItem('kitchenSoundEnabled') !== 'false';
+
+function playAlarmSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const pattern = [
+      { freq: 900, dur: 0.18 },
+      { freq: 650, dur: 0.18 },
+      { freq: 900, dur: 0.18 },
+      { freq: 650, dur: 0.18 }
+    ];
+    let t = ctx.currentTime;
+    pattern.forEach(n => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.frequency.value = n.freq; osc.type = 'sine';
+      g.gain.setValueAtTime(0.85, t);
+      g.gain.exponentialRampToValueAtTime(0.02, t + n.dur);
+      osc.start(t); osc.stop(t + n.dur);
+      t += n.dur + 0.08;
+    });
+  } catch(e) { console.log('Ses hatası:', e); }
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('kitchenSoundEnabled', soundEnabled);
+  const btn = document.getElementById('soundToggle');
+  btn.textContent = soundEnabled ? '🔊 Ses Açık' : '🔇 Ses Kapalı';
+  btn.style.opacity = soundEnabled ? '1' : '0.5';
+}
+
+document.getElementById('soundToggle').textContent = soundEnabled ? '🔊 Ses Açık' : '🔇 Ses Kapalı';
+document.getElementById('soundToggle').style.opacity = soundEnabled ? '1' : '0.5';
+
+function showNotification(msg) {
+  const n = document.createElement('div');
+  n.className = 'notification';
+  n.textContent = msg;
+  document.body.appendChild(n);
+  requestAnimationFrame(() => n.classList.add('show'));
+  setTimeout(() => n.classList.remove('show'), 4000);
+  setTimeout(() => n.remove(), 4400);
+}
+
+let knownOrderIds = new Set();
+let isFirstLoad = true;
+
+function renderIngChips(items) {
+  if (!items || items.length === 0) return '<small style="color:#888;">Yok</small>';
+  return items.map(i => `<span class="ing-chip ${i.free ? 'free' : ''}">${i.free ? '🆓' : '💰'} ${i.name}</span>`).join('');
+}
+
+function renderPlate(p, idx) {
+  const isCombo = p.is_combo || (p.options && p.options.length > 0);
+  
+  // 🧇 Eğer kampanya ise: ana waffle seçimini bul (group_name'i waffle ile alakalı olan)
+  let mainWaffleName = null;
+  let otherOptions = p.options || [];
+  if (isCombo && p.options && p.options.length > 0) {
+    // İlk option main_waffle olabilir (group_name'i "Waffle" içeriyorsa)
+    // Daha güvenli yöntem: group_name'inde "waffle" geçen ya da ilk option olan
+    const possibleWaffleOpt = p.options.find(o => 
+      o.group_name && (o.group_name.toLowerCase().includes('waffle') || o.group_name.toLowerCase().includes('tür'))
+    );
+    if (possibleWaffleOpt) {
+      mainWaffleName = possibleWaffleOpt.name;
+      otherOptions = p.options.filter(o => o !== possibleWaffleOpt);
+    }
+  }
+  
+  const malzemelerHtml = p.malzemeler && p.malzemeler.length > 0 
+    ? `<div class="malzeme-section">
+         <div class="malzeme-label">🍫 Malzemeler</div>
+         <div class="malzeme-chips">${renderIngChips(p.malzemeler)}</div>
+       </div>` 
+    : '<div class="malzeme-section"><small style="color:#888;">Sade</small></div>';
+  
+  const bevHtml = (p.icecekler && p.icecekler.length > 0)
+    ? `<div class="extras-block bev">
+         <div class="extras-label bev">🥤 İÇECEK</div>
+         <div class="extras-list">${p.icecekler.map(i => i.name).join(' · ')}</div>
+       </div>`
+    : '';
+  
+  const dessertHtml = (p.dondurmalar && p.dondurmalar.length > 0)
+    ? `<div class="extras-block dessert">
+         <div class="extras-label dessert">🍦 DONDURMA</div>
+         <div class="extras-list">${p.dondurmalar.map(i => i.name).join(' · ')}</div>
+       </div>`
+    : '';
+  
+  const extrasWrap = (bevHtml || dessertHtml) 
+    ? `<div class="plate-extras">${bevHtml}${dessertHtml}</div>`
+    : '';
+  
+  // 🎁 Diğer kampanya seçimleri (Bedava içecek vb.)
+  const optionsHtml = (otherOptions && otherOptions.length > 0)
+    ? `<div class="combo-options">
+         ${otherOptions.map(o => `
+           <div class="combo-opt-block">
+             <div class="combo-opt-label">🎁 ${o.group_name}</div>
+             <div class="combo-opt-value">${o.name}</div>
+           </div>
+         `).join('')}
+       </div>`
+    : '';
+  
+  // 🧇 Ana waffle seçimi varsa - alt başlık olarak göster
+  const mainWaffleHtml = mainWaffleName
+    ? `<div style="background:linear-gradient(135deg,#d4edda,#c3e6cb); border:2px solid #28a745; padding:8px 12px; border-radius:10px; margin:6px 0;">
+         <div style="font-size:11px; font-weight:900; color:#155724; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">🧇 SEÇİLEN WAFFLE</div>
+         <div style="font-size:16px; font-weight:900; color:#0d3818;">${mainWaffleName}</div>
+       </div>`
+    : '';
+  
+  const titleIcon = isCombo ? '🎁' : '🧇';
+  const titlePrefix = isCombo ? 'Combo Menü' : `Tabak ${idx+1}`;
+  
+  return `
+    <div class="plate-block ${isCombo ? 'is-combo' : ''}">
+      <div class="plate-title">${titleIcon} ${titlePrefix}: ${p.base_name}</div>
+      ${mainWaffleHtml}
+      ${malzemelerHtml}
+      ${extrasWrap}
+      ${optionsHtml}
+    </div>`;
+}
+
+function renderStandalone(bevs, desserts) {
+  let html = '';
+  if (bevs && bevs.length > 0) {
+    html += `
+      <div class="standalone-bevs">
+        <div class="standalone-title">🥤 İÇECEKLER</div>
+        <div class="standalone-items">
+          ${bevs.map(b => `<span class="standalone-chip">${b.name}</span>`).join('')}
+        </div>
+      </div>`;
+  }
+  if (desserts && desserts.length > 0) {
+    html += `
+      <div class="standalone-desserts">
+        <div class="standalone-title">🍦 DONDURMALAR</div>
+        <div class="standalone-items">
+          ${desserts.map(d => `<span class="standalone-chip">${d.name}</span>`).join('')}
+        </div>
+      </div>`;
+  }
+  return html ? `<div class="standalone-section">${html}</div>` : '';
+}
+
+function renderCampaigns(campaigns) {
+  if (!campaigns || campaigns.length === 0) return '';
+  
+  return `
+    <div class="campaign-section">
+      ${campaigns.map(c => {
+        const itemsStr = (c.items || []).map(i => `${i.quantity}× ${i.name}`).join(' · ');
+        const qtyBadge = c.quantity > 1 ? `<span class="campaign-qty-badge">×${c.quantity}</span>` : '';
+        return `
+          <div class="campaign-item">
+            <div class="campaign-item-title">
+              <span>🎁 ${c.name}</span>
+              ${qtyBadge}
+            </div>
+            ${itemsStr ? `<div class="campaign-includes">📦 ${itemsStr}</div>` : ''}
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+async function loadOrders() {
+  try {
+    const res = await fetch('/api/orders');
+    if (!res.ok) {
+      if (res.status === 403) { window.location.href = '/' + ADMIN_PREFIX + '-giris?target=mutfak'; return; }
+      throw new Error('HTTP ' + res.status);
+    }
+    const orders = await res.json();
+    const grid = document.getElementById('orderGrid');
+    document.getElementById('orderCount').textContent = orders.length;
+    
+    const newIds = new Set();
+    const newOrdersOnly = [];
+    orders.forEach(o => {
+      newIds.add(o.id);
+      if (!isFirstLoad && !knownOrderIds.has(o.id)) newOrdersOnly.push(o);
+    });
+    
+    if (newOrdersOnly.length > 0) {
+      if (soundEnabled) playAlarmSound();
+      showNotification('🔔 Yeni sipariş! Masa ' + newOrdersOnly[0].table_no);
+    }
+    
+    knownOrderIds = newIds;
+    isFirstLoad = false;
+    
+    if (orders.length === 0) {
+      grid.innerHTML = '<div class="empty-state">🍽️ Şu an aktif sipariş yok</div>';
+      return;
+    }
+    
+    grid.innerHTML = orders.map(o => {
+      const isNew = newOrdersOnly.some(x => x.id === o.id);
+      const campaignsHtml = renderCampaigns(o.campaigns);
+      const platesHtml = (o.plates && o.plates.length > 0)
+        ? o.plates.map((p, i) => renderPlate(p, i)).join('')
+        : '';
+      const standaloneHtml = renderStandalone(o.standalone_bevs, o.standalone_desserts);
+      
+      return `
+        <div class="order-card ${o.status} ${isNew ? 'new-flash' : ''}" data-id="${o.id}">
+          <div class="order-head">
+            <div>
+              <span class="masa-pill">🪑 Masa ${o.table_no}</span>
+              <span class="order-id">#${o.id}</span>
+              ${o.customer_name ? `<div style="margin-top:5px; color:#ff4d8c; font-weight:700; font-size:14px;">👤 ${o.customer_name}</div>` : ''}
+            </div>
+            <span class="order-time">🕐 ${o.created_at}</span>
+          </div>
+          ${campaignsHtml}
+          ${platesHtml}
+          ${standaloneHtml}
+          ${o.note ? `<div style="background:#fff3cd; padding:9px; border-radius:9px; font-size:13px; margin-top:9px;">📝 <b>Not:</b> ${o.note}</div>` : ''}
+          <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ffd6e3;">
+            <span class="total-badge">💰 ${o.total.toFixed(2)} TL</span>
+          </div>
+          <div class="actions">
+            ${o.status === 'pending' ? `<button class="btn-prep" onclick="updateOrderStatus(${o.id}, 'preparing')">🔥 Hazırlanıyor</button>` : ''}
+            ${o.status === 'preparing' ? `<button class="btn-ready" onclick="updateOrderStatus(${o.id}, 'ready')">✅ Hazır!</button>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    console.error('Hata:', e);
+  }
+}
+
+async function updateOrderStatus(id, status) {
+  await fetch('/api/orders/' + id + '/status', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ status })
+  });
+  loadOrders();
+}
+
+loadOrders();
+setInterval(loadOrders, 3000);
+</script>
+{% endblock %}

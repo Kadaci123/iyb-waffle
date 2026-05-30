@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="padding-top: 40px; text-align: center;">
+  <div class="brand" style="font-size: 56px; margin-bottom: 6px;">iyb waffle 🧇</div>
+  <p style="color:#a86b8a; margin-bottom: 30px;">Hoş geldiniz!</p>
+  
+  <div class="card">
+    <h3 style="margin-bottom: 14px;">📱 Masanızı Seçin</h3>
+    <p style="color:#888; font-size:13px; margin-bottom: 14px;">Gerçekte QR ile direkt açılır</p>
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;">
+      <a href="/menu/1" style="text-decoration:none;">
+        <div style="background:linear-gradient(135deg,#ff6b9d,#ff8db5); color:white; padding:18px 10px; border-radius:14px; font-weight:800;">🪑<br>Masa 1</div>
+      </a>
+      <a href="/menu/2" style="text-decoration:none;">
+        <div style="background:linear-gradient(135deg,#ff6b9d,#ff8db5); color:white; padding:18px 10px; border-radius:14px; font-weight:800;">🪑<br>Masa 2</div>
+      </a>
+      <a href="/menu/3" style="text-decoration:none;">
+        <div style="background:linear-gradient(135deg,#ff6b9d,#ff8db5); color:white; padding:18px 10px; border-radius:14px; font-weight:800;">🪑<br>Masa 3</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Personel girişi gizli — alt köşede mini link -->
+<div id="staffLogin" style="display:none; margin-top:20px;">
+  <div style="background:white; padding:16px; border-radius:14px; box-shadow:0 4px 14px rgba(255,107,157,0.15);">
+    <h3 style="color:#d63384; margin-bottom:12px; font-size:14px;">🔐 Personel Girişi</h3>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;">
+      <a href="/{{ admin_prefix }}-giris?target=yonetici" style="text-decoration:none;">
+        <button class="btn" style="font-size:11px; padding:10px 4px;">⚙️<br>Yönetici</button>
+      </a>
+      <a href="/{{ admin_prefix }}-giris?target=mutfak" style="text-decoration:none;">
+        <button class="btn" style="font-size:11px; padding:10px 4px; background:linear-gradient(135deg,#ffa500,#ffb84d);">👨‍🍳<br>Mutfak</button>
+      </a>
+      <a href="/{{ admin_prefix }}-giris?target=kasa" style="text-decoration:none;">
+        <button class="btn" style="font-size:11px; padding:10px 4px; background:linear-gradient(135deg,#28a745,#20c997);">💰<br>Kasa</button>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Yönetim için klavye kısayolu: 5 saniye içinde boş alanda 5 kez tıkla -->
+<script>
+let clickCount = 0;
+let clickTimer = null;
+const ADMIN_PREFIX = "{{ admin_prefix }}";
+
+document.body.addEventListener('click', (e) => {
+  if (e.target.tagName === 'A' || e.target.closest('a')) return;
+  clickCount++;
+  clearTimeout(clickTimer);
+  clickTimer = setTimeout(() => clickCount = 0, 1500);
+  if (clickCount >= 5) {
+    if (confirm('Personel girişi açılsın mı?')) {
+      const target = confirm('Tamam = Yönetici, İptal = Mutfak') ? 'yonetici' : 'mutfak';
+      window.location.href = '/' + ADMIN_PREFIX + '-giris?target=' + target;
+    }
+    clickCount = 0;
+  }
+});
+</script>
+{% endblock %}

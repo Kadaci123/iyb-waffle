@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Giriş — iyb waffle{% endblock %}
+{% block content %}
+<div class="container" style="padding-top: 50px;">
+  <div style="text-align: center; margin-bottom: 24px;">
+    <div class="brand" style="font-size: 38px;">iyb waffle 🧇</div>
+    <p style="color:#d63384; margin-top: 8px; font-weight: 700;">
+      {% if target == 'yonetici' %}⚙️ Yönetici Girişi
+      {% elif target == 'mutfak' %}👨‍🍳 Mutfak Girişi
+      {% elif target == 'kasa' %}💰 Kasa Girişi
+      {% else %}🔐 Personel Girişi{% endif %}
+    </p>
+  </div>
+
+  {% if not target or target not in ['yonetici', 'mutfak', 'kasa'] %}
+  <div class="card" style="margin-bottom: 14px;">
+    <h3 style="text-align: center; margin-bottom: 14px;">Hangi panele?</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+      <a href="/{{ admin_prefix }}-giris?target=yonetici" style="text-decoration: none;">
+        <button class="btn" style="font-size: 12px; padding: 14px 4px;">⚙️<br>Yönetici</button>
+      </a>
+      <a href="/{{ admin_prefix }}-giris?target=mutfak" style="text-decoration: none;">
+        <button class="btn" style="font-size: 12px; padding: 14px 4px; background: linear-gradient(135deg,#ffa500,#ffb84d);">👨‍🍳<br>Mutfak</button>
+      </a>
+      <a href="/{{ admin_prefix }}-giris?target=kasa" style="text-decoration: none;">
+        <button class="btn" style="font-size: 12px; padding: 14px 4px; background: linear-gradient(135deg,#28a745,#20c997);">💰<br>Kasa</button>
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <form method="POST" autocomplete="off">
+      <label>PIN Kodu</label>
+      <input type="password" 
+             name="pin" 
+             autofocus 
+             placeholder="••••" 
+             required
+             maxlength="12"
+             minlength="4"
+             autocomplete="new-password"
+             style="text-align:center; font-size: 22px; letter-spacing: 4px; padding: 16px;">
+      {% if error %}
+      <div style="background:#ffe0e0; color:#c0392b; padding:10px; border-radius:10px; margin-top:10px; text-align:center;">⚠️ {{ error }}</div>
+      {% endif %}
+      <div style="background:#fff5f8; padding:10px; border-radius:10px; margin-top:10px; font-size:11px; color:#888; text-align:center;">
+        🔐 PIN <b>4–12 karakter</b> · Harf, rakam ve noktalama (! @ # vb.)
+      </div>
+      <div style="height: 14px;"></div>
+      <button type="submit" class="btn">🔐 Giriş Yap</button>
+    </form>
+  </div>
+  
+  <a href="/"><button class="btn btn-ghost" style="margin-top: 12px;">← Ana sayfa</button></a>
+</div>
+{% endblock %}
