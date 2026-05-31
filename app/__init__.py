@@ -47,6 +47,29 @@ def create_app():
         # ============ Upload klasörünü oluştur ============
         uploads_dir = os.path.join(app.root_path, 'static', 'uploads')
         os.makedirs(uploads_dir, exist_ok=True)
+
+        # ============ İLK KURULUM: Firma + Şube yoksa oluştur ============
+        from app.models import Firm, Branch
+        if not Firm.query.first():
+            print('🏢 İlk kurulum: Firma ve şube oluşturuluyor...')
+            firma = Firm(
+                name='iyb waffle',
+                email='info@iybwaffles.com',
+                city='İstanbul',
+                country='Türkiye'
+            )
+            db.session.add(firma)
+            db.session.commit()
+            
+            sube = Branch(
+                firm_id=firma.id,
+                name='iyb waffle',
+                city='İstanbul',
+                qr_code_prefix='iyb'
+            )
+            db.session.add(sube)
+            db.session.commit()
+            print('✅ Firma ve şube oluşturuldu!')
     
     from app.routes import bp
     app.register_blueprint(bp)
