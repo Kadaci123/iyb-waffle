@@ -1259,7 +1259,8 @@ def generate_qr(table_id):
         import qrcode
         table = Table.query.get_or_404(table_id)
         qr = qrcode.QRCode(version=1, box_size=10, border=2)
-        qr.add_data(f"http://localhost:5000/menu/{table.table_number}")
+        base_url = request.host_url.rstrip('/')
+        qr.add_data(f"{base_url}/menu/{table.table_number}")
         qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
         img_io = BytesIO()
