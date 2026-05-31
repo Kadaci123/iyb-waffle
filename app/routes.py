@@ -1097,11 +1097,25 @@ def delete_table(table_id):
         return jsonify({'ok': False, 'error': 'Oturum sona erdi'}), 403
     try:
         table = Table.query.get_or_404(table_id)
+        # Bu masaya bağlı tüm siparişleri ve alt kayıtlarını sil
+        orders = Order.query.filter_by(table_id=table_id).all()
+        for o in orders:
+            plates = OrderPlate.query.filter_by(order_id=o.id).all()
+            for plate in plates:
+                OrderPlateIngredient.query.filter_by(order_plate_id=plate.id).delete(synchronize_session=False)
+                OrderPlateOption.query.filter_by(order_plate_id=plate.id).delete(synchronize_session=False)
+            db.session.flush()
+            OrderPlate.query.filter_by(order_id=o.id).delete(synchronize_session=False)
+            db.session.flush()
+        Order.query.filter_by(table_id=table_id).delete(synchronize_session=False)
+        db.session.flush()
         db.session.delete(table)
         db.session.commit()
         return jsonify({'ok': True})
     except Exception as e:
         db.session.rollback()
+        import traceback
+        traceback.print_exc()
         return jsonify({'ok': False, 'error': str(e)}), 500
 
 
