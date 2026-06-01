@@ -587,7 +587,7 @@ def create_order():
 @require_role('yonetici')
 def yonetici():
     categories = Category.query.order_by(Category.category_type, Category.display_order).all()
-    products = Product.query.order_by(Product.product_type, Product.display_order).all()
+    products = Product.query.filter_by(is_active=True).order_by(Product.product_type, Product.display_order).all()
     
     today = date.today()
     today_orders = Order.query.filter(cast(Order.created_at, Date) == today).all()
