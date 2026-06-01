@@ -721,6 +721,19 @@ def delete_product(pid):
         return jsonify({'ok': False, 'error': 'Oturum sona erdi'}), 403
     try:
         p = Product.query.get_or_404(pid)
+        # Bu ürün herhangi bir siparişte kullanılmış mı?
+        used_as_base = OrderPlate.query.filter_by(base_product_id=pid).first()
+        used_as_ing = OrderPlateIngredient.query.filter_by(ingredient_product_id=pid).first()
+        used_in_option = OrderPlateOption.query.filter_by(selected_product_id=pid).first()
+        
+        if used_as_base or used_as_ing or used_in_option:
+            # Siparişte kullanılmış → silme, sadece pasif yap (geçmiş korunsun)
+            p.is_active = False
+            db.session.commit()
+            return jsonify({'ok': True, 'archived': True,
+                            'message': 'Bu ürün geçmiş siparişlerde olduğu için menüden gizlendi (silinmedi).'})
+        
+        # Hiç kullanılmamış → tamamen sil
         if p.image_url and p.image_url.startswith('/static/uploads/'):
             try:
                 fp = os.path.join('app', p.image_url.lstrip('/'))
@@ -728,13 +741,17 @@ def delete_product(pid):
                     os.remove(fp)
             except:
                 pass
+        # Bu ürüne bağlı option item/group kayıtlarını temizle
+        ProductOptionItem.query.filter_by(product_id=pid).delete(synchronize_session=False)
+        db.session.flush()
         db.session.delete(p)
         db.session.commit()
         return jsonify({'ok': True})
     except Exception as e:
         db.session.rollback()
+        import traceback
+        traceback.print_exc()
         return jsonify({'ok': False, 'error': str(e)}), 500
-
 
 # ============ FOTOĞRAF YÜKLEME ============
 @bp.route('/api/product/<int:pid>/upload-image', methods=['POST'])
