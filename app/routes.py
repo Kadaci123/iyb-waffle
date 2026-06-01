@@ -1152,6 +1152,7 @@ def delete_table(table_id):
 
 
 # ============ PIN ============
+@bp.route('/api/pin', methods=['POST'])
 def change_pin():
     if not session.get('role_yonetici'):
         return jsonify({'ok': False, 'error': 'Oturum sona erdi'}), 403
