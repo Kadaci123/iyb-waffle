@@ -144,9 +144,24 @@ def format_order_for_telegram(order, table, plates_with_data, standalone_bevs, s
 # ========================================================================
 # PIN KODLARI
 # ========================================================================
-YONETICI_PIN = "1234"
-MUTFAK_PIN = "5678"
-KASA_PIN = "9999"
+# Varsayılan PIN'ler (DB'de kayıt yoksa bunlar kullanılır)
+DEFAULT_YONETICI_PIN = "1234"
+DEFAULT_MUTFAK_PIN = "5678"
+DEFAULT_KASA_PIN = "9999"
+
+
+def get_pin(role):
+    """PIN'i veritabanından oku, yoksa varsayılanı döndür."""
+    from app.models import AppSetting
+    defaults = {
+        'yonetici': DEFAULT_YONETICI_PIN,
+        'mutfak': DEFAULT_MUTFAK_PIN,
+        'kasa': DEFAULT_KASA_PIN
+    }
+    setting = AppSetting.query.filter_by(key=f'pin_{role}').first()
+    if setting and setting.value:
+        return setting.value
+    return defaults.get(role, '')
 
 PIN_PATTERN = re.compile(r'^[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?`~]{4,12}$')
 
@@ -183,11 +198,11 @@ def login():
         pin = request.form.get('pin', '')
         valid = False
         if target == 'yonetici':
-            valid = (pin == YONETICI_PIN)
+            valid = (pin == get_pin('yonetici'))
         elif target == 'mutfak':
-            valid = (pin == MUTFAK_PIN or pin == YONETICI_PIN)
+            valid = (pin == get_pin('mutfak') or pin == get_pin('yonetici'))
         elif target == 'kasa':
-            valid = (pin == KASA_PIN or pin == YONETICI_PIN)
+            valid = (pin == get_pin('kasa') or pin == get_pin('yonetici'))
         
         if valid:
             session.pop('role_yonetici', None)
@@ -1137,11 +1152,11 @@ def delete_table(table_id):
 
 
 # ============ PIN ============
-@bp.route('/api/pin', methods=['POST'])
 def change_pin():
     if not session.get('role_yonetici'):
         return jsonify({'ok': False, 'error': 'Oturum sona erdi'}), 403
     try:
+        from app.models import AppSetting
         data = request.json
         role = data.get('role')
         pin = data.get('pin', '').strip()
@@ -1153,19 +1168,19 @@ def change_pin():
             return jsonify({'ok': False, 'error': 'PIN 4-12 karakter olmalı'}), 400
         if not PIN_PATTERN.match(pin):
             return jsonify({'ok': False, 'error': 'PIN sadece harf, rakam ve noktalama içerebilir'}), 400
-        routes_path = __file__
-        with open(routes_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        var_name = f'{role.upper()}_PIN'
-        pin_escaped = pin.replace('\\', '\\\\').replace('"', '\\"')
-        pattern = rf'({var_name}\s*=\s*)"[^"]*"'
-        new_content = re.sub(pattern, rf'\g<1>"{pin_escaped}"', content, count=1)
-        if new_content == content:
-            return jsonify({'ok': False, 'error': 'PIN değişkeni bulunamadı'}), 500
-        with open(routes_path, 'w', encoding='utf-8') as f:
-            f.write(new_content)
+        
+        # PIN'i veritabanına kaydet (kalıcı)
+        key = f'pin_{role}'
+        setting = AppSetting.query.filter_by(key=key).first()
+        if not setting:
+            setting = AppSetting(key=key, value=pin)
+            db.session.add(setting)
+        else:
+            setting.value = pin
+        db.session.commit()
         return jsonify({'ok': True})
     except Exception as e:
+        db.session.rollback()
         import traceback
         traceback.print_exc()
         return jsonify({'ok': False, 'error': str(e)}), 500
