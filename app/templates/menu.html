@@ -930,6 +930,8 @@ document.querySelectorAll('.cat-tab').forEach(tab => {
     document.querySelectorAll('.cat-panel').forEach(p => {
       p.style.display = p.dataset.cat === tab.dataset.cat ? 'block' : 'none';
     });
+    // Tıklanan sekmeyi yatayda ortala (sondaki kategoriler de tam görünsün)
+    tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   });
 });
 document.querySelector('.cat-tab')?.classList.add('active');
