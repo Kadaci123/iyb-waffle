@@ -403,22 +403,22 @@ body {
 .cat-tabs { display: flex; gap: 7px; overflow-x: auto; padding: 2px; }
 .cat-tabs::-webkit-scrollbar { display: none; }
 .cat-tab { flex: 0 0 auto; background: white; border: 2px solid #ffd6e3; padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: 12px; cursor: pointer; white-space: nowrap; transition: all 0.25s; color: #2d1b2e; }
-.cat-tab.active { background: linear-gradient(135deg, #ff4d8c, #ff8db5); color: white; border-color: #ff4d8c; }
+.cat-tab.active { background: linear-gradient(135deg, #ff4d8c, #ff8db5); color: white; border-color: #ff4d8c; box-shadow: 0 4px 14px rgba(255,77,140,0.45); transform: scale(1.06); font-weight: 800; }
 
 .cat-info { background: linear-gradient(135deg, #fff5f8, #ffe8f0); padding: 9px 14px; border-radius: 12px; font-size: 12px; color: #d63384; font-weight: 600; margin-bottom: 10px; }
 
-.ing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.ing-item { background: white; border: 2px solid transparent; border-radius: 14px; padding: 8px 6px; text-align: center; cursor: pointer; position: relative; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 2px 8px rgba(255,107,157,0.08); min-width: 0; }
+.ing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.ing-item { background: white; border: 2px solid transparent; border-radius: 12px; padding: 6px 4px; text-align: center; cursor: pointer; position: relative; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 2px 8px rgba(255,107,157,0.08); min-width: 0; }
 .ing-item:active { transform: scale(0.92); }
 .ing-item.selected { background: linear-gradient(135deg, #ff4d8c, #ff8db5); color: white; border-color: #d63384; }
 .ing-item.selected .ing-name, .ing-item.selected .ing-price-mini { color: white; }
 .ing-item.selected::after { content: '✓'; position: absolute; top: 4px; right: 6px; font-weight: 900; font-size: 14px; color: white; }
 .ing-item.out-of-stock { background: #f5f5f5; opacity: 0.5; cursor: not-allowed; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 .ing-item.out-of-stock::before { content: '❌ BİTTİ'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(220, 53, 69, 0.95); color: white; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; z-index: 10; white-space: nowrap; }
-.ing-photo { width: 100%; height: 60px; border-radius: 10px; object-fit: cover; margin-bottom: 4px; background: #fff5f8; }
-.ing-emoji-fallback { width: 100%; height: 60px; border-radius: 10px; background: linear-gradient(135deg, #fff5f8, #ffeaf2); display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 4px; }
+.ing-photo { width: 100%; height: 46px; border-radius: 9px; object-fit: cover; margin-bottom: 3px; background: #fff5f8; }
+.ing-emoji-fallback { width: 100%; height: 46px; border-radius: 9px; background: linear-gradient(135deg, #fff5f8, #ffeaf2); display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 3px; }
 .ing-item.selected .ing-emoji-fallback { background: rgba(255,255,255,0.25); }
-.ing-name { font-size: 11px; margin-top: 2px; font-weight: 700; line-height: 1.15; color: #2d1b2e; word-break: break-word; }
+.ing-name { font-size: 10px; margin-top: 2px; font-weight: 700; line-height: 1.1; color: #2d1b2e; word-break: break-word; }
 .ing-price-mini { font-size: 10px; color: #d63384; font-weight: 700; margin-top: 2px; }
 
 .cart-line { background: linear-gradient(135deg, #fff5f8, #ffe8f0); padding: 12px; border-radius: 14px; margin-bottom: 8px; font-size: 13px; }
